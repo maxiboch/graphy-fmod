@@ -34,6 +34,13 @@ namespace Tayx.Graphy.Fps
         // arbitrary. The only real cost to a higher cap is memory.
         private const short m_histogramFpsCap = 999;
 
+        // CPU and GPU tracking
+        private G_DoubleEndedQueue m_cpuSamples;
+        private G_DoubleEndedQueue m_gpuSamples;
+        private float m_cpuAverageWindowSum = 0f;
+        private float m_gpuAverageWindowSum = 0f;
+        private FrameTiming[] m_frameTimings = new FrameTiming[1];
+
         #endregion
 
         #region Properties -> Public
@@ -42,6 +49,18 @@ namespace Tayx.Graphy.Fps
         public short AverageFPS { get; private set; } = 0;
         public short OnePercentFPS { get; private set; } = 0;
         public short Zero1PercentFps { get; private set; } = 0;
+        
+        // CPU tracking properties (in ms)
+        public float CurrentCPU { get; private set; } = 0;
+        public float AverageCPU { get; private set; } = 0;
+        public float OnePercentCPU { get; private set; } = 0;
+        public float Zero1PercentCpu { get; private set; } = 0;
+        
+        // GPU tracking properties (in ms)
+        public float CurrentGPU { get; private set; } = 0;
+        public float AverageGPU { get; private set; } = 0;
+        public float OnePercentGPU { get; private set; } = 0;
+        public float Zero1PercentGpu { get; private set; } = 0;
 
         #endregion
 
@@ -56,33 +75,48 @@ namespace Tayx.Graphy.Fps
         {
             m_unscaledDeltaTime = Time.unscaledDeltaTime;
 
+            // Capture frame timings for CPU/GPU
+            FrameTimingManager.CaptureFrameTimings();
+            FrameTimingManager.GetLatestTimings(1, m_frameTimings);
+            float cpuTime = (float)m_frameTimings[0].cpuFrameTime;
+            float gpuTime = (float)m_frameTimings[0].gpuFrameTime;
+
             // Update fps and ms
-
             CurrentFPS = (short) (Mathf.RoundToInt( 1f / m_unscaledDeltaTime ));
+            CurrentCPU = cpuTime;
+            CurrentGPU = gpuTime;
 
-            // Update avg fps
-
+            // Update FPS statistics
             uint averageAddedFps = 0;
-
             m_fpsSamplesCount = UpdateStatistics( CurrentFPS );
-
             averageAddedFps = (uint) m_fpsAverageWindowSum;
-
             AverageFPS = (short) ((float) averageAddedFps / (float) m_fpsSamplesCount);
 
-            // Update percent lows
+            // Update CPU statistics
+            UpdateCpuStatistics( cpuTime );
+            AverageCPU = m_cpuAverageWindowSum / m_cpuSamples.Count;
+            
+            // Update GPU statistics  
+            UpdateGpuStatistics( gpuTime );
+            AverageGPU = m_gpuAverageWindowSum / m_gpuSamples.Count;
 
+            // Update FPS percent lows
             short samplesBelowOnePercent = (short) Mathf.Min( m_fpsSamplesCount - 1, m_onePercentSamples );
-
             m_histogram.WriteToSortedArray( m_fpsSamplesSorted, samplesBelowOnePercent + 1 );
 
-            // Calculate 0.1% and 1% quantiles, these values represent the fps
-            // values below which fall 0.1% and 1% of the samples within the
-            // moving window.
-
+            // Calculate 0.1% and 1% quantiles for FPS
             Zero1PercentFps = (short) Mathf.RoundToInt( CalculateQuantile( 0.001f ) );
-
             OnePercentFPS = (short) Mathf.RoundToInt( CalculateQuantile( 0.01f ) );
+            
+            // Calculate CPU percentiles using standard deviation approach
+            float cpuStdDev = CalculateCpuStandardDeviation();
+            OnePercentCPU = AverageCPU + cpuStdDev * 2.58f;  // 99th percentile
+            Zero1PercentCpu = AverageCPU + cpuStdDev * 3.29f;  // 99.9th percentile
+            
+            // Calculate GPU percentiles using standard deviation approach
+            float gpuStdDev = CalculateGpuStandardDeviation();
+            OnePercentGPU = AverageGPU + gpuStdDev * 2.58f;  // 99th percentile
+            Zero1PercentGpu = AverageGPU + gpuStdDev * 3.29f;  // 99.9th percentile
         }
 
         #endregion
@@ -100,12 +134,14 @@ namespace Tayx.Graphy.Fps
 
         public void Reset()
         {
-            for( int i = 0; i < m_fpsSamplesCapacity; i++ )
-            {
-                m_fpsSamples[ i ] = 0;
-            }
+            m_fpsSamples.Clear();
+            m_cpuSamples.Clear();
+            m_gpuSamples.Clear();
             m_fpsSamplesCount = 0;
-            m_indexSample = 0;
+            m_fpsAverageWindowSum = 0;
+            m_cpuAverageWindowSum = 0f;
+            m_gpuAverageWindowSum = 0f;
+            m_histogram.Clear();
         }
 
         #endregion
@@ -117,6 +153,11 @@ namespace Tayx.Graphy.Fps
             m_fpsSamples = new G_DoubleEndedQueue( m_fpsSamplesCapacity );
             m_fpsSamplesSorted = new short[ m_onePercentSamples + 1 ];
             m_histogram = new G_Histogram( 0, m_histogramFpsCap );
+            
+            // Initialize CPU and GPU sample queues
+            m_cpuSamples = new G_DoubleEndedQueue( m_fpsSamplesCapacity );
+            m_gpuSamples = new G_DoubleEndedQueue( m_fpsSamplesCapacity );
+            
             UpdateParameters();
         }
 
@@ -148,6 +189,62 @@ namespace Tayx.Graphy.Fps
             float valueHigh = m_fpsSamplesSorted[ indexHigh ];
             float lerp = Mathf.Max( position - indexLow, 0 );
             return Mathf.Lerp( valueLow, valueHigh, lerp );
+        }
+        
+        private void UpdateCpuStatistics( float cpuTime )
+        {
+            if( m_cpuSamples.Full )
+            {
+                float remove = (float)m_cpuSamples.PopFront();
+                m_cpuAverageWindowSum -= remove;
+            }
+            m_cpuSamples.PushBack( (short)(cpuTime * 1000) );  // Store as int milliseconds
+            m_cpuAverageWindowSum += cpuTime;
+        }
+        
+        private void UpdateGpuStatistics( float gpuTime )
+        {
+            if( m_gpuSamples.Full )
+            {
+                float remove = (float)m_gpuSamples.PopFront();
+                m_gpuAverageWindowSum -= remove;
+            }
+            m_gpuSamples.PushBack( (short)(gpuTime * 1000) );  // Store as int milliseconds  
+            m_gpuAverageWindowSum += gpuTime;
+        }
+        
+        private float CalculateCpuStandardDeviation()
+        {
+            if( m_cpuSamples.Count < 2 ) return 0f;
+            
+            float mean = AverageCPU;
+            float sumSquaredDiffs = 0f;
+            
+            for( int i = 0; i < m_cpuSamples.Count; i++ )
+            {
+                float value = (float)m_cpuSamples[i] / 1000f;  // Convert back to seconds
+                float diff = value - mean;
+                sumSquaredDiffs += diff * diff;
+            }
+            
+            return Mathf.Sqrt( sumSquaredDiffs / (m_cpuSamples.Count - 1) );
+        }
+        
+        private float CalculateGpuStandardDeviation()
+        {
+            if( m_gpuSamples.Count < 2 ) return 0f;
+            
+            float mean = AverageGPU;
+            float sumSquaredDiffs = 0f;
+            
+            for( int i = 0; i < m_gpuSamples.Count; i++ )
+            {
+                float value = (float)m_gpuSamples[i] / 1000f;  // Convert back to seconds
+                float diff = value - mean;
+                sumSquaredDiffs += diff * diff;
+            }
+            
+            return Mathf.Sqrt( sumSquaredDiffs / (m_gpuSamples.Count - 1) );
         }
 
         #endregion
