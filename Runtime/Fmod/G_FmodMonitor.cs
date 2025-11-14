@@ -214,29 +214,30 @@ namespace Tayx.Graphy.Fmod
                         {
                             FMOD.Studio.System studioSystem = (FMOD.Studio.System)studioSystemObj;
                             if (studioSystem.isValid())
-                {
-                    FMOD.System coreSystem;
-                    var result = studioSystem.getCoreSystem(out coreSystem);
-                    if (result == FMOD.RESULT.OK && coreSystem.hasHandle())
-                    {
-                        m_fmodSystem = coreSystem.handle;
-                        
-                        // Get master channel group for audio metering
-                        FMOD.ChannelGroup masterGroup;
-                        result = coreSystem.getMasterChannelGroup(out masterGroup);
-                        if (result == FMOD.RESULT.OK)
-                        {
-                            m_masterChannelGroup = masterGroup.handle;
-                        }
-                        
-                        // Enable metering on the master channel group
-                        if (m_masterChannelGroup != IntPtr.Zero)
-                        {
-                            masterGroup.setMeteringEnabled(true, true);
-                        }
-                        
-                        m_isInitialized = true;
-                                Debug.Log("[Graphy] FMOD monitoring initialized successfully");
+                            {
+                                FMOD.System coreSystem;
+                                var result = studioSystem.getCoreSystem(out coreSystem);
+                                if (result == FMOD.RESULT.OK && coreSystem.hasHandle())
+                                {
+                                    m_fmodSystem = coreSystem.handle;
+                                    
+                                    // Get master channel group for audio metering
+                                    FMOD.ChannelGroup masterGroup;
+                                    result = coreSystem.getMasterChannelGroup(out masterGroup);
+                                    if (result == FMOD.RESULT.OK)
+                                    {
+                                        m_masterChannelGroup = masterGroup.handle;
+                                    }
+                                    
+                                    // Enable metering on the master channel group
+                                    if (m_masterChannelGroup != IntPtr.Zero)
+                                    {
+                                        masterGroup.setMeteringEnabled(true, true);
+                                    }
+                                    
+                                    m_isInitialized = true;
+                                    Debug.Log("[Graphy] FMOD monitoring initialized successfully");
+                                }
                             }
                         }
                     }
