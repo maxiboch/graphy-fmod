@@ -219,15 +219,26 @@ namespace Tayx.Graphy.Fps
             
             float mean = AverageCPU;
             float sumSquaredDiffs = 0f;
+            int count = m_cpuSamples.Count;
             
-            for( int i = 0; i < m_cpuSamples.Count; i++ )
+            // We need to temporarily extract values to calculate standard deviation
+            // Since DoubleEndedQueue doesn't support indexing, we'll pop and re-push
+            short[] tempValues = new short[count];
+            for( int i = 0; i < count; i++ )
             {
-                float value = (float)m_cpuSamples[i] / 1000f;  // Convert back to seconds
-                float diff = value - mean;
-                sumSquaredDiffs += diff * diff;
+                tempValues[i] = m_cpuSamples.PopFront();
             }
             
-            return Mathf.Sqrt( sumSquaredDiffs / (m_cpuSamples.Count - 1) );
+            // Calculate standard deviation and re-push values
+            for( int i = 0; i < count; i++ )
+            {
+                float value = tempValues[i] / 1000f;  // Convert back to seconds
+                float diff = value - mean;
+                sumSquaredDiffs += diff * diff;
+                m_cpuSamples.PushBack( tempValues[i] );
+            }
+            
+            return Mathf.Sqrt( sumSquaredDiffs / (count - 1) );
         }
         
         private float CalculateGpuStandardDeviation()
@@ -236,15 +247,26 @@ namespace Tayx.Graphy.Fps
             
             float mean = AverageGPU;
             float sumSquaredDiffs = 0f;
+            int count = m_gpuSamples.Count;
             
-            for( int i = 0; i < m_gpuSamples.Count; i++ )
+            // We need to temporarily extract values to calculate standard deviation
+            // Since DoubleEndedQueue doesn't support indexing, we'll pop and re-push
+            short[] tempValues = new short[count];
+            for( int i = 0; i < count; i++ )
             {
-                float value = (float)m_gpuSamples[i] / 1000f;  // Convert back to seconds
-                float diff = value - mean;
-                sumSquaredDiffs += diff * diff;
+                tempValues[i] = m_gpuSamples.PopFront();
             }
             
-            return Mathf.Sqrt( sumSquaredDiffs / (m_gpuSamples.Count - 1) );
+            // Calculate standard deviation and re-push values
+            for( int i = 0; i < count; i++ )
+            {
+                float value = tempValues[i] / 1000f;  // Convert back to seconds
+                float diff = value - mean;
+                sumSquaredDiffs += diff * diff;
+                m_gpuSamples.PushBack( tempValues[i] );
+            }
+            
+            return Mathf.Sqrt( sumSquaredDiffs / (count - 1) );
         }
 
         #endregion
