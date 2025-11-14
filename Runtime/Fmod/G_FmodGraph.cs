@@ -114,7 +114,9 @@ namespace Tayx.Graphy.Fmod
                     }
                 }
 
-                m_cpuGraphShader.UpdateArray(m_cpuGraphArray);
+                m_cpuGraphShader.ShaderArrayValues = m_cpuGraphArray;
+                m_cpuGraphShader.UpdatePoints();
+                m_cpuGraphShader.UpdateArrayValuesLength();
                 m_cpuGraphShader.Average = m_fmodMonitor.AverageFmodCpu;
                 m_cpuGraphShader.UpdateAverage();
                 m_cpuGraphShader.GoodThreshold = 5f;
@@ -140,7 +142,9 @@ namespace Tayx.Graphy.Fmod
                     }
                 }
 
-                m_memoryGraphShader.UpdateArray(m_memoryGraphArray);
+                m_memoryGraphShader.ShaderArrayValues = m_memoryGraphArray;
+                m_memoryGraphShader.UpdatePoints();
+                m_memoryGraphShader.UpdateArrayValuesLength();
                 m_memoryGraphShader.Average = m_fmodMonitor.AverageFmodMemoryMB;
                 m_memoryGraphShader.UpdateAverage();
                 m_memoryGraphShader.GoodThreshold = 50f;
@@ -166,7 +170,9 @@ namespace Tayx.Graphy.Fmod
                     }
                 }
 
-                m_channelsGraphShader.UpdateArray(m_channelsGraphArray);
+                m_channelsGraphShader.ShaderArrayValues = m_channelsGraphArray;
+                m_channelsGraphShader.UpdatePoints();
+                m_channelsGraphShader.UpdateArrayValuesLength();
                 m_channelsGraphShader.Average = m_fmodMonitor.AverageChannelsPlaying;
                 m_channelsGraphShader.UpdateAverage();
                 m_channelsGraphShader.GoodThreshold = 32f;
@@ -190,17 +196,23 @@ namespace Tayx.Graphy.Fmod
 
             if (m_cpuGraphShader != null)
             {
-                m_cpuGraphShader.UpdateArray(m_cpuGraphArray);
+                m_cpuGraphShader.ShaderArrayValues = m_cpuGraphArray;
+                m_cpuGraphShader.UpdatePoints();
+                m_cpuGraphShader.UpdateArrayValuesLength();
             }
 
             if (m_memoryGraphShader != null)
             {
-                m_memoryGraphShader.UpdateArray(m_memoryGraphArray);
+                m_memoryGraphShader.ShaderArrayValues = m_memoryGraphArray;
+                m_memoryGraphShader.UpdatePoints();
+                m_memoryGraphShader.UpdateArrayValuesLength();
             }
 
             if (m_channelsGraphShader != null)
             {
-                m_channelsGraphShader.UpdateArray(m_channelsGraphArray);
+                m_channelsGraphShader.ShaderArrayValues = m_channelsGraphArray;
+                m_channelsGraphShader.UpdatePoints();
+                m_channelsGraphShader.UpdateArrayValuesLength();
             }
         }
 
@@ -232,7 +244,7 @@ namespace Tayx.Graphy.Fmod
                     Image = m_cpuGraph
                 };
 
-                m_cpuGraphShader.InitializeShader(m_graphShader);
+                m_cpuGraphShader.InitializeShader();
             }
 
             if (m_memoryGraph != null && m_graphShader != null)
@@ -242,7 +254,7 @@ namespace Tayx.Graphy.Fmod
                     Image = m_memoryGraph
                 };
 
-                m_memoryGraphShader.InitializeShader(m_graphShader);
+                m_memoryGraphShader.InitializeShader();
             }
 
             if (m_channelsGraph != null && m_graphShader != null)
@@ -252,7 +264,7 @@ namespace Tayx.Graphy.Fmod
                     Image = m_channelsGraph
                 };
 
-                m_channelsGraphShader.InitializeShader(m_graphShader);
+                m_channelsGraphShader.InitializeShader();
             }
 
             UpdateParameters();

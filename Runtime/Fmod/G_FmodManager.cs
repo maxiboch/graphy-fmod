@@ -131,10 +131,7 @@ namespace Tayx.Graphy.Fmod
                     m_fmodTextGameObject?.SetActive(true);
                     SetGraphActive(true);
                     
-                    if (!silentUpdate)
-                    {
-                        m_graphyManager.SetModuleMode(this, true);
-                    }
+                // State management is handled internally
                     break;
 
                 case GraphyManager.ModuleState.TEXT:
@@ -144,10 +141,7 @@ namespace Tayx.Graphy.Fmod
                     m_fmodTextGameObject?.SetActive(true);
                     SetGraphActive(false);
                     
-                    if (!silentUpdate)
-                    {
-                        m_graphyManager.SetModuleMode(this, true);
-                    }
+                // State management is handled internally
                     break;
 
                 case GraphyManager.ModuleState.BACKGROUND:
@@ -155,19 +149,13 @@ namespace Tayx.Graphy.Fmod
                     SetGraphActive(false);
                     m_fmodTextGameObject?.SetActive(false);
                     
-                    if (!silentUpdate)
-                    {
-                        m_graphyManager.SetModuleMode(this, false);
-                    }
+                // State management is handled internally
                     break;
 
                 case GraphyManager.ModuleState.OFF:
                     gameObject.SetActive(false);
                     
-                    if (!silentUpdate)
-                    {
-                        m_graphyManager.SetModuleMode(this, false);
-                    }
+                // State management is handled internally
                     break;
             }
         }

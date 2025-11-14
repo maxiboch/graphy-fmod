@@ -201,10 +201,19 @@ namespace Tayx.Graphy.Fmod
 
             try
             {
-                // Try to get FMOD system instance
-                // This assumes FMOD for Unity is being used
-                var studioSystem = FMODUnity.RuntimeManager.StudioSystem;
-                if (studioSystem.isValid())
+                // Try to get FMOD system instance directly
+                // This uses reflection to access FMODUnity if available
+                var fmodUnityType = System.Type.GetType("FMODUnity.RuntimeManager, FMODUnity");
+                if (fmodUnityType != null)
+                {
+                    var studioSystemProp = fmodUnityType.GetProperty("StudioSystem");
+                    if (studioSystemProp != null)
+                    {
+                        var studioSystemObj = studioSystemProp.GetValue(null, null);
+                        if (studioSystemObj != null)
+                        {
+                            FMOD.Studio.System studioSystem = (FMOD.Studio.System)studioSystemObj;
+                            if (studioSystem.isValid())
                 {
                     FMOD.System coreSystem;
                     var result = studioSystem.getCoreSystem(out coreSystem);
@@ -227,7 +236,9 @@ namespace Tayx.Graphy.Fmod
                         }
                         
                         m_isInitialized = true;
-                        Debug.Log("[Graphy] FMOD monitoring initialized successfully");
+                                Debug.Log("[Graphy] FMOD monitoring initialized successfully");
+                            }
+                        }
                     }
                 }
             }
@@ -253,7 +264,9 @@ namespace Tayx.Graphy.Fmod
                 {
                     // FMOD returns individual CPU percentages, we'll track the sum
                     CurrentFmodCpu = m_cpuUsage.dsp + m_cpuUsage.stream + m_cpuUsage.geometry + m_cpuUsage.update + m_cpuUsage.studio;
-                    UpdateStatistic(m_cpuSamples, CurrentFmodCpu, ref m_cpuSum, out AverageFmodCpu);
+                    float avgCpu;
+                    UpdateStatistic(m_cpuSamples, CurrentFmodCpu, ref m_cpuSum, out avgCpu);
+                    AverageFmodCpu = avgCpu;
                     PeakFmodCpu = Mathf.Max(PeakFmodCpu, CurrentFmodCpu);
                 }
 
@@ -262,7 +275,9 @@ namespace Tayx.Graphy.Fmod
                 if (result == FMOD.RESULT.OK)
                 {
                     CurrentFmodMemoryMB = m_currentAllocated / (1024f * 1024f);
-                    UpdateStatistic(m_memorySamples, CurrentFmodMemoryMB, ref m_memorySum, out AverageFmodMemoryMB);
+                    float avgMemory;
+                    UpdateStatistic(m_memorySamples, CurrentFmodMemoryMB, ref m_memorySum, out avgMemory);
+                    AverageFmodMemoryMB = avgMemory;
                     PeakFmodMemoryMB = Mathf.Max(PeakFmodMemoryMB, CurrentFmodMemoryMB);
                 }
 
@@ -288,7 +303,9 @@ namespace Tayx.Graphy.Fmod
                     // Convert to KB/s (assuming our update interval)
                     float totalBytesPerSecond = (sampleBytesRead + streamBytesRead + otherBytesRead) / m_updateInterval;
                     CurrentFileUsageKBps = totalBytesPerSecond / 1024f;
-                    UpdateStatistic(m_fileUsageSamples, CurrentFileUsageKBps, ref m_fileUsageSum, out AverageFileUsageKBps);
+                    float avgFileUsage;
+                    UpdateStatistic(m_fileUsageSamples, CurrentFileUsageKBps, ref m_fileUsageSum, out avgFileUsage);
+                    AverageFileUsageKBps = avgFileUsage;
                     PeakFileUsageKBps = Mathf.Max(PeakFileUsageKBps, CurrentFileUsageKBps);
 
                     // Reset the file usage counters after reading
@@ -324,8 +341,11 @@ namespace Tayx.Graphy.Fmod
                             CurrentRightPeak = LinearToDecibels(m_peakLevels[1]);
                             
                             // Update averages
-                            UpdateStatistic(m_leftRmsSamples, CurrentLeftRMS, ref m_leftRmsSum, out AverageLeftRMS);
-                            UpdateStatistic(m_rightRmsSamples, CurrentRightRMS, ref m_rightRmsSum, out AverageRightRMS);
+                            float avgLeftRms, avgRightRms;
+                            UpdateStatistic(m_leftRmsSamples, CurrentLeftRMS, ref m_leftRmsSum, out avgLeftRms);
+                            UpdateStatistic(m_rightRmsSamples, CurrentRightRMS, ref m_rightRmsSum, out avgRightRms);
+                            AverageLeftRMS = avgLeftRms;
+                            AverageRightRMS = avgRightRms;
                         }
                         else if (numChannels == 1)
                         {
