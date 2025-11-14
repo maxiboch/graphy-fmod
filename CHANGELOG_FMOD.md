@@ -1,4 +1,4 @@
-# Changelog - Graphy Custom Fork
+# Changelog - Graphy-FMOD Fork
 
 ## [v0.3.0-custom] - 2025-11-14
 

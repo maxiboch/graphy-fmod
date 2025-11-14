@@ -20,8 +20,8 @@
   	},
     "repository": {
         "type": "git",
-        "url": "https://github.com/maxiboch/graphy-custom.git"
+        "url": "https://github.com/maxiboch/graphy-fmod.git"
     },
-    "documentationUrl": "https://github.com/maxiboch/graphy-custom/blob/main/README.md",
-    "changelogUrl": "https://github.com/maxiboch/graphy-custom/blob/main/CHANGELOG_CUSTOM.md"
+    "documentationUrl": "https://github.com/maxiboch/graphy-fmod/blob/main/README.md",
+    "changelogUrl": "https://github.com/maxiboch/graphy-fmod/blob/main/CHANGELOG_FMOD.md"
 }

@@ -3,7 +3,7 @@
 ## Original Graphy Creator
 - **Martin Pane** ([@martinTayx](https://github.com/Tayx94)) - Original creator and maintainer of Graphy
 
-## Custom Fork Contributors
+## Graphy-FMOD Fork Contributors
 
 ### FMOD Module & Integration
 - **Maxi Boch** ([@maxiboch](https://github.com/maxiboch))
