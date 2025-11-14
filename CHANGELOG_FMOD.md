@@ -1,5 +1,47 @@
 # Changelog - Graphy-FMOD Fork
 
+## [v3.1.1] - 2024-12-19
+
+### Added - Audio Sections Reorganization & FFT Spectrum Support
+**Author: Maxi Boch (@maxiboch)**
+
+- **Unity Editor Improvements**
+  - Renamed "[ AUDIO ]" to "[ AUDIO (Built-in) ]" for clarity
+  - Renamed "[ FMOD ]" to "[ AUDIO (FMOD) ]" to group audio features
+  - Hide irrelevant properties when audio modules are OFF
+  - Conditional display of settings based on module state (OFF/TEXT/FULL)
+
+- **FFT Spectrum Analysis for FMOD**
+  - Complete FFT DSP infrastructure in G_FmodMonitor
+  - Configurable FFT window size (128-8192, power of 2)
+  - Real-time spectrum data retrieval and dB conversion
+  - Blackman window type for optimal frequency resolution
+  - Zero GC allocations with pre-allocated buffers
+  - Automatic cleanup on disable/destroy
+
+- **FMOD DSP Bindings**
+  - DSP creation by type (FFT)
+  - Parameter setting for window size and type
+  - Spectrum data retrieval with marshalling
+  - Proper DSP lifecycle management
+
+- **Editor UI for FFT Settings**
+  - FFT enable toggle in FMOD section
+  - Spectrum size slider with power-of-2 enforcement
+  - Informative help boxes for all features
+  - Prepared for future GraphyManager integration
+
+### Changed
+- Audio sections now clearly differentiated for extensibility
+- FMOD section only shows relevant settings based on module state
+- Built-in audio section hides FFT settings when module is OFF
+
+### Technical Details
+- FFT implementation follows zero-GC philosophy
+- Spectrum data available via `SpectrumData` property
+- Ready for audio visualizations and frequency analysis
+- Supports future audio engine integrations (Wwise, ADX2, etc.)
+
 ## [v3.1.0] - 2024-12-19
 
 ### Added - Complete CPU/GPU Monitoring Integration
