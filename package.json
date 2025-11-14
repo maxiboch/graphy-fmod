@@ -1,6 +1,6 @@
 {
     "name": "com.tayx.graphy.fmod",
-    "version": "3.1.1",
+    "version": "3.1.2",
     "displayName": "Graphy w/FMOD - Enhanced Performance Monitor",
     "description": "Maxi Boch's custom fork of Martin Pane's Graphy with FMOD audio system monitoring, CPU/GPU tracking, and performance improvements",
     "unity": "2019.4",

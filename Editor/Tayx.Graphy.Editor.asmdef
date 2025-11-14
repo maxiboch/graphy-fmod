@@ -27,7 +27,7 @@
             "define": "GRAPHY_BUILTIN_AUDIO"
         },
         {
-            "name": "FMODUnity",
+            "name": "com.fmod",
             "expression": "",
             "define": "GRAPHY_FMOD"
         }

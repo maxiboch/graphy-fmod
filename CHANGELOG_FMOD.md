@@ -1,5 +1,11 @@
 # Changelog - Graphy-FMOD Fork
 
+## [v3.1.2] - 2025-11-14
+
+### Fixed - FMOD Package Detection (Core Engine)
+- Update asmdef versionDefines to detect FMOD Core via "com.fmod"
+- Ensures [ AUDIO (FMOD) ] section appears in Unity Editor with Core-only installs
+
 ## [v3.1.1] - 2024-12-19
 
 ### Added - Audio Sections Reorganization & FFT Spectrum Support
