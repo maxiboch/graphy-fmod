@@ -23,6 +23,10 @@ using System.Linq;
 using Tayx.Graphy.Audio;
 #endif // GRAPHY_BUILTIN_AUDIO
 
+#if GRAPHY_FMOD
+using Tayx.Graphy.Fmod;
+#endif // GRAPHY_FMOD
+
 using Tayx.Graphy.Fps;
 using Tayx.Graphy.Ram;
 using Tayx.Graphy.Utils;
@@ -50,8 +54,26 @@ namespace Tayx.Graphy
             Ram_Reserved,
             Ram_Mono,
 #if GRAPHY_BUILTIN_AUDIO
-            Audio_DB
+            Audio_DB,
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+            Fmod_Cpu,
+            Fmod_Cpu_Avg,
+            Fmod_Cpu_Peak,
+            Fmod_Memory,
+            Fmod_Memory_Avg,
+            Fmod_Memory_Peak,
+            Fmod_Channels,
+            Fmod_Channels_Avg,
+            Fmod_Channels_Peak,
+            Fmod_FileIO,
+            Fmod_FileIO_Avg,
+            Fmod_FileIO_Peak,
+            Fmod_Audio_RMS_Left,
+            Fmod_Audio_RMS_Right,
+            Fmod_Audio_Peak_Left,
+            Fmod_Audio_Peak_Right
+#endif // GRAPHY_FMOD
         }
 
         public enum DebugComparer
@@ -181,6 +203,10 @@ namespace Tayx.Graphy
         private G_AudioMonitor m_audioMonitor = null;
 #endif // GRAPHY_BUILTIN_AUDIO
 
+#if GRAPHY_FMOD
+        private G_FmodMonitor m_fmodMonitor = null;
+#endif // GRAPHY_FMOD
+
         #endregion
 
         #region Methods -> Unity Callbacks
@@ -193,6 +219,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
             m_audioMonitor = GetComponentInChildren<G_AudioMonitor>();
 #endif // GRAPHY_BUILTIN_AUDIO
+
+#if GRAPHY_FMOD
+            m_fmodMonitor = GetComponentInChildren<G_FmodMonitor>();
+#endif // GRAPHY_FMOD
         }
 
         private void Update()
@@ -519,6 +549,45 @@ namespace Tayx.Graphy
                 case DebugVariable.Audio_DB:
                     return m_audioMonitor != null ? m_audioMonitor.MaxDB : 0;
 #endif // GRAPHY_BUILTIN_AUDIO
+
+#if GRAPHY_FMOD
+                case DebugVariable.Fmod_Cpu:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.CurrentFmodCpu : 0;
+                case DebugVariable.Fmod_Cpu_Avg:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.AverageFmodCpu : 0;
+                case DebugVariable.Fmod_Cpu_Peak:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.PeakFmodCpu : 0;
+                    
+                case DebugVariable.Fmod_Memory:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.CurrentFmodMemoryMB : 0;
+                case DebugVariable.Fmod_Memory_Avg:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.AverageFmodMemoryMB : 0;
+                case DebugVariable.Fmod_Memory_Peak:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.PeakFmodMemoryMB : 0;
+                    
+                case DebugVariable.Fmod_Channels:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.CurrentChannelsPlaying : 0;
+                case DebugVariable.Fmod_Channels_Avg:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.AverageChannelsPlaying : 0;
+                case DebugVariable.Fmod_Channels_Peak:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.PeakChannelsPlaying : 0;
+                    
+                case DebugVariable.Fmod_FileIO:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.CurrentFileUsageKBps : 0;
+                case DebugVariable.Fmod_FileIO_Avg:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.AverageFileUsageKBps : 0;
+                case DebugVariable.Fmod_FileIO_Peak:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.PeakFileUsageKBps : 0;
+                    
+                case DebugVariable.Fmod_Audio_RMS_Left:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.CurrentLeftRMS : 0;
+                case DebugVariable.Fmod_Audio_RMS_Right:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.CurrentRightRMS : 0;
+                case DebugVariable.Fmod_Audio_Peak_Left:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.CurrentLeftPeak : 0;
+                case DebugVariable.Fmod_Audio_Peak_Right:
+                    return m_fmodMonitor != null && m_fmodMonitor.IsAvailable ? m_fmodMonitor.CurrentRightPeak : 0;
+#endif // GRAPHY_FMOD
 
                 default:
                     return 0;
