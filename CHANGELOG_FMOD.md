@@ -1,5 +1,49 @@
 # Changelog - Graphy-FMOD Fork
 
+## [v3.1.0] - 2024-12-19
+
+### Added - Complete CPU/GPU Monitoring Integration
+**Author: Maxi Boch (@maxiboch)**
+
+- **Unity Editor Integration**
+  - CPU/GPU monitoring settings exposed in GraphyManagerEditor
+  - Enable/disable toggles for CPU and GPU monitoring
+  - Custom color settings for CPU and GPU graphs/text
+  - Configurable performance thresholds (good/caution in milliseconds)
+  - Visual foldout section "[ CPU / GPU ]" in inspector
+  - Helpful tooltips and info boxes for user guidance
+
+- **Runtime Properties**
+  - All CPU/GPU settings exposed as public properties in GraphyManager
+  - EnableCpuMonitor/EnableGpuMonitor boolean flags
+  - CpuColor/GpuColor for custom visualization
+  - Good/Caution threshold values for both CPU and GPU
+  - Real-time getter properties for Current/Average/OnePercent/Zero1Percent values
+
+- **GraphyDebugger Support**
+  - 8 new debug variables added to DebugVariable enum:
+    - Cpu, Cpu_Min, Cpu_Max, Cpu_Avg
+    - Gpu, Gpu_Min, Gpu_Max, Gpu_Avg
+  - Full integration with DebugPacket system for conditional actions
+  - Threshold-based triggers for CPU/GPU performance monitoring
+
+- **Enhanced Display Logic**
+  - G_FpsText now respects enable/disable flags for CPU/GPU
+  - Dynamic color assignment based on configured thresholds
+  - Separate SetCpuRelatedTextColor and SetGpuRelatedTextColor methods
+  - Maintains backward compatibility with existing FPS coloring
+
+### Changed
+- Version bumped to 3.1.0 to reflect major feature completion
+- Default CPU/GPU thresholds: 8.33ms (good, 120fps) and 16.67ms (caution, 60fps)
+- G_FpsText only updates CPU/GPU displays when monitoring is enabled
+
+### Technical Details
+- Serialized fields added to GraphyManager for persistence
+- Properties update FpsManager when changed for immediate effect
+- Zero GC allocations - maintains performance-first philosophy
+- Fully integrated with existing paulatwarp CPU/GPU tracking code
+
 ## [v0.3.0-custom] - 2025-11-14
 
 ### Enhanced FMOD Integration

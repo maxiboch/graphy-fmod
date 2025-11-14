@@ -83,25 +83,31 @@ namespace Tayx.Graphy.Fps
                 m_msText.text = Mathf.Min(99.9f, m_ms).ToStringNonAlloc( m_msStringFormat );
                 SetFpsRelatedTextColor( m_msText, m_fps );
 
-                // Update cpu block
-                m_msCpuText.text = Mathf.Min(99.9f, m_fpsMonitor.CurrentCPU).ToStringNonAlloc( m_msStringFormat );
-                SetMsRelatedTextColor( m_msCpuText, m_fpsMonitor.CurrentCPU );
-                m_onePercentCpuText.text = Mathf.Min(99.9f, m_fpsMonitor.OnePercentCPU).ToStringNonAlloc( m_msStringFormat );
-                SetMsRelatedTextColor( m_onePercentCpuText, m_fpsMonitor.OnePercentCPU );
-                m_zero1PercentCpuText.text = Mathf.Min(99.9f, m_fpsMonitor.Zero1PercentCpu).ToStringNonAlloc( m_msStringFormat );
-                SetMsRelatedTextColor( m_zero1PercentCpuText, m_fpsMonitor.Zero1PercentCpu );
-                m_avgCpuText.text = Mathf.Min(99.9f, m_fpsMonitor.AverageCPU).ToStringNonAlloc( m_msStringFormat );
-                SetMsRelatedTextColor( m_avgCpuText, m_fpsMonitor.AverageCPU );
+                // Update cpu block (only if enabled)
+                if (m_graphyManager.EnableCpuMonitor)
+                {
+                    m_msCpuText.text = Mathf.Min(99.9f, m_fpsMonitor.CurrentCPU).ToStringNonAlloc( m_msStringFormat );
+                    SetCpuRelatedTextColor( m_msCpuText, m_fpsMonitor.CurrentCPU );
+                    m_onePercentCpuText.text = Mathf.Min(99.9f, m_fpsMonitor.OnePercentCPU).ToStringNonAlloc( m_msStringFormat );
+                    SetCpuRelatedTextColor( m_onePercentCpuText, m_fpsMonitor.OnePercentCPU );
+                    m_zero1PercentCpuText.text = Mathf.Min(99.9f, m_fpsMonitor.Zero1PercentCpu).ToStringNonAlloc( m_msStringFormat );
+                    SetCpuRelatedTextColor( m_zero1PercentCpuText, m_fpsMonitor.Zero1PercentCpu );
+                    m_avgCpuText.text = Mathf.Min(99.9f, m_fpsMonitor.AverageCPU).ToStringNonAlloc( m_msStringFormat );
+                    SetCpuRelatedTextColor( m_avgCpuText, m_fpsMonitor.AverageCPU );
+                }
 
-                // Update gpu block
-                m_msGpuText.text = Mathf.Min(99.9f, m_fpsMonitor.CurrentGPU).ToStringNonAlloc( m_msStringFormat );
-                SetMsRelatedTextColor( m_msGpuText, m_fpsMonitor.CurrentGPU );
-                m_onePercentGpuText.text = Mathf.Min(99.9f, m_fpsMonitor.OnePercentGPU).ToStringNonAlloc( m_msStringFormat );
-                SetMsRelatedTextColor( m_onePercentGpuText, m_fpsMonitor.OnePercentGPU );
-                m_zero1PercentGpuText.text = Mathf.Min(99.9f, m_fpsMonitor.Zero1PercentGpu).ToStringNonAlloc( m_msStringFormat );
-                SetMsRelatedTextColor( m_zero1PercentGpuText, m_fpsMonitor.Zero1PercentGpu );
-                m_avgGpuText.text = Mathf.Min(99.9f, m_fpsMonitor.AverageGPU).ToStringNonAlloc( m_msStringFormat );
-                SetMsRelatedTextColor( m_avgGpuText, m_fpsMonitor.AverageGPU );
+                // Update gpu block (only if enabled)
+                if (m_graphyManager.EnableGpuMonitor)
+                {
+                    m_msGpuText.text = Mathf.Min(99.9f, m_fpsMonitor.CurrentGPU).ToStringNonAlloc( m_msStringFormat );
+                    SetGpuRelatedTextColor( m_msGpuText, m_fpsMonitor.CurrentGPU );
+                    m_onePercentGpuText.text = Mathf.Min(99.9f, m_fpsMonitor.OnePercentGPU).ToStringNonAlloc( m_msStringFormat );
+                    SetGpuRelatedTextColor( m_onePercentGpuText, m_fpsMonitor.OnePercentGPU );
+                    m_zero1PercentGpuText.text = Mathf.Min(99.9f, m_fpsMonitor.Zero1PercentGpu).ToStringNonAlloc( m_msStringFormat );
+                    SetGpuRelatedTextColor( m_zero1PercentGpuText, m_fpsMonitor.Zero1PercentGpu );
+                    m_avgGpuText.text = Mathf.Min(99.9f, m_fpsMonitor.AverageGPU).ToStringNonAlloc( m_msStringFormat );
+                    SetGpuRelatedTextColor( m_avgGpuText, m_fpsMonitor.AverageGPU );
+                }
 
                 // Reset variables
                 m_deltaTime = 0f;
@@ -159,6 +165,38 @@ namespace Tayx.Graphy.Fps
                 text.color = m_graphyManager.GoodFPSColor;
             }
             else if ( ms <= 33.3f )
+            {
+                text.color = m_graphyManager.CautionFPSColor;
+            }
+            else
+            {
+                text.color = m_graphyManager.CriticalFPSColor;
+            }
+        }
+        
+        private void SetCpuRelatedTextColor( Text text, float ms )
+        {
+            if ( ms <= m_graphyManager.GoodCpuThreshold )
+            {
+                text.color = m_graphyManager.CpuColor;
+            }
+            else if ( ms <= m_graphyManager.CautionCpuThreshold )
+            {
+                text.color = m_graphyManager.CautionFPSColor;
+            }
+            else
+            {
+                text.color = m_graphyManager.CriticalFPSColor;
+            }
+        }
+        
+        private void SetGpuRelatedTextColor( Text text, float ms )
+        {
+            if ( ms <= m_graphyManager.GoodGpuThreshold )
+            {
+                text.color = m_graphyManager.GpuColor;
+            }
+            else if ( ms <= m_graphyManager.CautionGpuThreshold )
             {
                 text.color = m_graphyManager.CautionFPSColor;
             }

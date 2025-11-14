@@ -50,6 +50,14 @@ namespace Tayx.Graphy
             Fps_Min,
             Fps_Max,
             Fps_Avg,
+            Cpu,
+            Cpu_Min,
+            Cpu_Max,
+            Cpu_Avg,
+            Gpu,
+            Gpu_Min,
+            Gpu_Max,
+            Gpu_Avg,
             Ram_Allocated,
             Ram_Reserved,
             Ram_Mono,
@@ -537,6 +545,24 @@ namespace Tayx.Graphy
                     return m_fpsMonitor != null ? m_fpsMonitor.Zero1PercentFps : 0;
                 case DebugVariable.Fps_Avg:
                     return m_fpsMonitor != null ? m_fpsMonitor.AverageFPS : 0;
+                    
+                case DebugVariable.Cpu:
+                    return m_fpsMonitor != null ? m_fpsMonitor.CurrentCPU : 0;
+                case DebugVariable.Cpu_Min:
+                    return m_fpsMonitor != null ? m_fpsMonitor.OnePercentCPU : 0;
+                case DebugVariable.Cpu_Max:
+                    return m_fpsMonitor != null ? m_fpsMonitor.Zero1PercentCpu : 0;
+                case DebugVariable.Cpu_Avg:
+                    return m_fpsMonitor != null ? m_fpsMonitor.AverageCPU : 0;
+                    
+                case DebugVariable.Gpu:
+                    return m_fpsMonitor != null ? m_fpsMonitor.CurrentGPU : 0;
+                case DebugVariable.Gpu_Min:
+                    return m_fpsMonitor != null ? m_fpsMonitor.OnePercentGPU : 0;
+                case DebugVariable.Gpu_Max:
+                    return m_fpsMonitor != null ? m_fpsMonitor.Zero1PercentGpu : 0;
+                case DebugVariable.Gpu_Avg:
+                    return m_fpsMonitor != null ? m_fpsMonitor.AverageGPU : 0;
 
                 case DebugVariable.Ram_Allocated:
                     return m_ramMonitor != null ? m_ramMonitor.AllocatedRam : 0;

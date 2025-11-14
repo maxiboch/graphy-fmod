@@ -27,8 +27,16 @@ Integrated CPU and GPU tracking features from [paulatwarp's fork](https://github
 - **Uses double-ended queue (deque) from PR #122** instead of ring buffer implementations
 - Ring buffer commits (885fe85 and 518ee59) were explicitly **excluded** in favor of the more efficient deque implementation
 
-### NEW: FMOD Audio System Monitoring (v0.3.0)
-This fork includes a comprehensive FMOD monitoring module that tracks:
+### NEW: Complete CPU/GPU Monitoring Integration (v3.1.0)
+This fork now includes full Unity Editor integration for CPU/GPU monitoring:
+- **Editor Settings**: Enable/disable toggles, custom colors, and performance thresholds
+- **GraphyDebugger Support**: 8 new debug variables for CPU/GPU tracking
+- **Runtime Properties**: All settings exposed for dynamic configuration
+- **Smart Display**: CPU/GPU values only shown when monitoring is enabled
+- **Custom Visualization**: Separate colors and thresholds for CPU vs GPU performance
+
+### FMOD Audio System Monitoring (v0.3.0)
+Comprehensive FMOD monitoring module that tracks:
 - **FMOD CPU Usage**: DSP, streaming, geometry, update, and Studio CPU percentages
 - **FMOD Memory**: Current and peak memory allocation in MB
 - **Active Channels**: Number of channels currently playing
@@ -128,7 +136,7 @@ Add this to your **manifest.json**:
 {
   "dependencies": {
     ...
-    "com.tayx.graphy.fmod": "https://github.com/maxiboch/graphy-fmod.git#v3.0.6",
+    "com.tayx.graphy.fmod": "https://github.com/maxiboch/graphy-fmod.git#v3.1.0",
     ...
   }
 }

@@ -162,6 +162,20 @@ namespace Tayx.Graphy
 
         [Range( 1, 200 )] [SerializeField] private int m_fpsTextUpdateRate = 3; // 3 updates per sec.
 
+        // CPU/GPU -----------------------------------------------------------------------
+        
+        [SerializeField] private bool m_enableCpuMonitor = true;
+        [SerializeField] private bool m_enableGpuMonitor = true;
+        
+        [SerializeField] private Color m_cpuColor = new Color32( 92, 173, 255, 255 );
+        [SerializeField] private Color m_gpuColor = new Color32( 255, 95, 125, 255 );
+        
+        [SerializeField] private float m_goodCpuThreshold = 8.33f; // 8.33ms = 120fps
+        [SerializeField] private float m_cautionCpuThreshold = 16.67f; // 16.67ms = 60fps
+        
+        [SerializeField] private float m_goodGpuThreshold = 8.33f; // 8.33ms = 120fps
+        [SerializeField] private float m_cautionGpuThreshold = 16.67f; // 16.67ms = 60fps
+
         // Ram ---------------------------------------------------------------------------
 
         [SerializeField] private ModuleState m_ramModuleState = ModuleState.FULL;
@@ -387,6 +401,102 @@ namespace Tayx.Graphy
         public float AverageFPS => m_fpsMonitor.AverageFPS;
         public float OnePercentFPS => m_fpsMonitor.OnePercentFPS;
         public float Zero1PercentFps => m_fpsMonitor.Zero1PercentFps;
+
+        // CPU/GPU -----------------------------------------------------------------------
+        
+        // Setters & Getters
+        
+        public bool EnableCpuMonitor
+        {
+            get => m_enableCpuMonitor;
+            set
+            {
+                m_enableCpuMonitor = value;
+                m_fpsManager.UpdateParameters();
+            }
+        }
+        
+        public bool EnableGpuMonitor
+        {
+            get => m_enableGpuMonitor;
+            set
+            {
+                m_enableGpuMonitor = value;
+                m_fpsManager.UpdateParameters();
+            }
+        }
+        
+        public Color CpuColor
+        {
+            get => m_cpuColor;
+            set
+            {
+                m_cpuColor = value;
+                m_fpsManager.UpdateParameters();
+            }
+        }
+        
+        public Color GpuColor
+        {
+            get => m_gpuColor;
+            set
+            {
+                m_gpuColor = value;
+                m_fpsManager.UpdateParameters();
+            }
+        }
+        
+        public float GoodCpuThreshold
+        {
+            get => m_goodCpuThreshold;
+            set
+            {
+                m_goodCpuThreshold = value;
+                m_fpsManager.UpdateParameters();
+            }
+        }
+        
+        public float CautionCpuThreshold
+        {
+            get => m_cautionCpuThreshold;
+            set
+            {
+                m_cautionCpuThreshold = value;
+                m_fpsManager.UpdateParameters();
+            }
+        }
+        
+        public float GoodGpuThreshold
+        {
+            get => m_goodGpuThreshold;
+            set
+            {
+                m_goodGpuThreshold = value;
+                m_fpsManager.UpdateParameters();
+            }
+        }
+        
+        public float CautionGpuThreshold
+        {
+            get => m_cautionGpuThreshold;
+            set
+            {
+                m_cautionGpuThreshold = value;
+                m_fpsManager.UpdateParameters();
+            }
+        }
+        
+        // Getters
+        
+        public float CurrentCPU => m_fpsMonitor.CurrentCPU;
+        public float AverageCPU => m_fpsMonitor.AverageCPU;
+        public float OnePercentCPU => m_fpsMonitor.OnePercentCPU;
+        public float Zero1PercentCPU => m_fpsMonitor.Zero1PercentCpu;
+        
+        public float CurrentGPU => m_fpsMonitor.CurrentGPU;
+        public float AverageGPU => m_fpsMonitor.AverageGPU;
+        public float OnePercentGPU => m_fpsMonitor.OnePercentGPU;
+        public float Zero1PercentGPU => m_fpsMonitor.Zero1PercentGpu;
 
         // Ram ---------------------------------------------------------------------------
 

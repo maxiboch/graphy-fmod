@@ -83,6 +83,18 @@ namespace Tayx.Graphy
         private SerializedProperty m_fpsGraphResolution;
 
         private SerializedProperty m_fpsTextUpdateRate;
+        
+        // CPU/GPU monitoring
+        private SerializedProperty m_enableCpuMonitor;
+        private SerializedProperty m_enableGpuMonitor;
+        private SerializedProperty m_cpuColor;
+        private SerializedProperty m_gpuColor;
+        private SerializedProperty m_goodCpuThreshold;
+        private SerializedProperty m_cautionCpuThreshold;
+        private SerializedProperty m_goodGpuThreshold;
+        private SerializedProperty m_cautionGpuThreshold;
+        
+        private bool m_cpuGpuInspectorToggle = true;
 
         #endregion
 
@@ -211,6 +223,16 @@ namespace Tayx.Graphy
             m_fpsGraphResolution = serObj.FindProperty( "m_fpsGraphResolution" );
 
             m_fpsTextUpdateRate = serObj.FindProperty( "m_fpsTextUpdateRate" );
+            
+            // CPU/GPU monitoring
+            m_enableCpuMonitor = serObj.FindProperty( "m_enableCpuMonitor" );
+            m_enableGpuMonitor = serObj.FindProperty( "m_enableGpuMonitor" );
+            m_cpuColor = serObj.FindProperty( "m_cpuColor" );
+            m_gpuColor = serObj.FindProperty( "m_gpuColor" );
+            m_goodCpuThreshold = serObj.FindProperty( "m_goodCpuThreshold" );
+            m_cautionCpuThreshold = serObj.FindProperty( "m_cautionCpuThreshold" );
+            m_goodGpuThreshold = serObj.FindProperty( "m_goodGpuThreshold" );
+            m_cautionGpuThreshold = serObj.FindProperty( "m_cautionGpuThreshold" );
 
             #endregion
 
@@ -957,6 +979,119 @@ namespace Tayx.Graphy
                 EditorGUILayout.HelpBox("FMOD monitoring will automatically detect your FMOD implementation. Displays CPU, Memory, Channels, File I/O and audio levels.", MessageType.Info);
             }
 #endif // GRAPHY_FMOD
+            #endregion
+            
+            #region Section -> CPU/GPU Monitoring
+            
+            GUILayout.Space( 20 );
+            
+            m_cpuGpuInspectorToggle = EditorGUILayout.Foldout
+            (
+                m_cpuGpuInspectorToggle,
+                content: " [ CPU / GPU ]",
+                style: GraphyEditorStyle.FoldoutStyle,
+                toggleOnLabelClick: true
+            );
+            
+            GUILayout.Space( 5 );
+            
+            if( m_cpuGpuInspectorToggle )
+            {
+                EditorGUILayout.LabelField( "CPU Monitoring:", EditorStyles.boldLabel );
+                
+                EditorGUI.indentLevel++;
+                
+                m_enableCpuMonitor.boolValue = EditorGUILayout.Toggle
+                (
+                    new GUIContent
+                    (
+                        text: "Enable CPU Monitor",
+                        tooltip: "Enables CPU timing monitoring in the FPS module."
+                    ),
+                    m_enableCpuMonitor.boolValue
+                );
+                
+                if( m_enableCpuMonitor.boolValue )
+                {
+                    m_cpuColor.colorValue = EditorGUILayout.ColorField
+                    (
+                        label: "CPU Color",
+                        value: m_cpuColor.colorValue
+                    );
+                    
+                    m_goodCpuThreshold.floatValue = EditorGUILayout.FloatField
+                    (
+                        new GUIContent
+                        (
+                            text: "Good CPU (ms)",
+                            tooltip: "CPU time considered good (default: 8.33ms = 120fps)."
+                        ),
+                        m_goodCpuThreshold.floatValue
+                    );
+                    
+                    m_cautionCpuThreshold.floatValue = EditorGUILayout.FloatField
+                    (
+                        new GUIContent
+                        (
+                            text: "Caution CPU (ms)",
+                            tooltip: "CPU time considered caution (default: 16.67ms = 60fps)."
+                        ),
+                        m_cautionCpuThreshold.floatValue
+                    );
+                }
+                
+                EditorGUI.indentLevel--;
+                
+                GUILayout.Space( 10 );
+                
+                EditorGUILayout.LabelField( "GPU Monitoring:", EditorStyles.boldLabel );
+                
+                EditorGUI.indentLevel++;
+                
+                m_enableGpuMonitor.boolValue = EditorGUILayout.Toggle
+                (
+                    new GUIContent
+                    (
+                        text: "Enable GPU Monitor",
+                        tooltip: "Enables GPU timing monitoring in the FPS module."
+                    ),
+                    m_enableGpuMonitor.boolValue
+                );
+                
+                if( m_enableGpuMonitor.boolValue )
+                {
+                    m_gpuColor.colorValue = EditorGUILayout.ColorField
+                    (
+                        label: "GPU Color",
+                        value: m_gpuColor.colorValue
+                    );
+                    
+                    m_goodGpuThreshold.floatValue = EditorGUILayout.FloatField
+                    (
+                        new GUIContent
+                        (
+                            text: "Good GPU (ms)",
+                            tooltip: "GPU time considered good (default: 8.33ms = 120fps)."
+                        ),
+                        m_goodGpuThreshold.floatValue
+                    );
+                    
+                    m_cautionGpuThreshold.floatValue = EditorGUILayout.FloatField
+                    (
+                        new GUIContent
+                        (
+                            text: "Caution GPU (ms)",
+                            tooltip: "GPU time considered caution (default: 16.67ms = 60fps)."
+                        ),
+                        m_cautionGpuThreshold.floatValue
+                    );
+                }
+                
+                EditorGUI.indentLevel--;
+                
+                EditorGUILayout.HelpBox("CPU/GPU monitoring requires Frame Timing data. Values show frame times in milliseconds.", MessageType.Info);
+            }
+            
             #endregion
 
             GUILayout.Space( 20 );
