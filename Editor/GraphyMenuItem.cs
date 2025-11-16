@@ -182,6 +182,77 @@ namespace Tayx.Graphy
             Debug.Log( "[Graphy] FMOD module setup complete with materials!" );
         }
 
+        [MenuItem( "Tools/Graphy/Add CPU/GPU/FileIO Graphs to FPS Module" )]
+        static void AddAdditionalGraphsToFpsModule()
+        {
+            // First generate materials
+            GenerateFmodMaterials();
+
+            // Find the FPS module in the scene
+            var fpsManager = Object.FindObjectOfType<Tayx.Graphy.Fps.G_FpsManager>();
+            if( fpsManager == null )
+            {
+                Debug.LogError( "[Graphy] No FPS module found in scene! Please add Graphy prefab first." );
+                return;
+            }
+
+            GameObject fpsModule = fpsManager.gameObject;
+
+            // Check if additional graphs component already exists
+            var additionalGraphs = fpsModule.GetComponent<Tayx.Graphy.Fps.G_FpsAdditionalGraphs>();
+            if( additionalGraphs != null )
+            {
+                Debug.LogWarning( "[Graphy] FPS module already has additional graphs component!" );
+                return;
+            }
+
+            // Find or create graph container
+            Transform graphContainer = fpsModule.transform.Find( "FPS_Graph_Container" );
+            if( graphContainer == null )
+            {
+                var containerGO = new GameObject( "FPS_Graph_Container", typeof( RectTransform ) );
+                containerGO.transform.SetParent( fpsModule.transform, false );
+                graphContainer = containerGO.transform;
+
+                var containerRect = containerGO.GetComponent<RectTransform>();
+                containerRect.anchorMin = Vector2.zero;
+                containerRect.anchorMax = Vector2.one;
+                containerRect.pivot = new Vector2( 0.5f, 0.5f );
+                containerRect.anchoredPosition = Vector2.zero;
+                containerRect.sizeDelta = Vector2.zero;
+            }
+
+            // Create CPU, GPU, and FileIO graph images
+            var cpuGraphGO = CreateGraphChild( "FPS_CPU_Graph", graphContainer, new Vector2( 0f, 60f ), new Vector2( 0f, 50f ) );
+            var gpuGraphGO = CreateGraphChild( "FPS_GPU_Graph", graphContainer, new Vector2( 0f, 5f ), new Vector2( 0f, 50f ) );
+            var fileIOGraphGO = CreateGraphChild( "FPS_FileIO_Graph", graphContainer, new Vector2( 0f, -50f ), new Vector2( 0f, 50f ) );
+
+            // Load materials
+            Material cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_CPU_Graph.mat" );
+            Material gpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_GPU_Graph.mat" );
+            Material fileIOMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_FileIO_Graph.mat" );
+
+            // Apply materials
+            if( cpuMat != null ) cpuGraphGO.GetComponent<Image>().material = cpuMat;
+            if( gpuMat != null ) gpuGraphGO.GetComponent<Image>().material = gpuMat;
+            if( fileIOMat != null ) fileIOGraphGO.GetComponent<Image>().material = fileIOMat;
+
+            // Add the additional graphs component
+            additionalGraphs = fpsModule.AddComponent<Tayx.Graphy.Fps.G_FpsAdditionalGraphs>();
+
+            // Wire up the references
+            SerializedObject graphsSO = new SerializedObject( additionalGraphs );
+            graphsSO.FindProperty( "m_cpuGraph" ).objectReferenceValue = cpuGraphGO.GetComponent<Image>();
+            graphsSO.FindProperty( "m_gpuGraph" ).objectReferenceValue = gpuGraphGO.GetComponent<Image>();
+            graphsSO.FindProperty( "m_fileIOGraph" ).objectReferenceValue = fileIOGraphGO.GetComponent<Image>();
+            graphsSO.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene() );
+
+            Debug.Log( "[Graphy] Added CPU/GPU/FileIO graphs to FPS module!" );
+        }
+
         static void CreateMaterialIfMissing( string path, Shader shader, Color color )
         {
             var existing = AssetDatabase.LoadAssetAtPath<Material>( path );
