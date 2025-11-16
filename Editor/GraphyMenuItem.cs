@@ -102,7 +102,6 @@ namespace Tayx.Graphy
             // Create FPS module CPU/GPU materials
             CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FPS_CPU_Graph.mat", graphShader, new Color( 1f, 0.65f, 0f, 1f ) ); // Orange
             CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FPS_GPU_Graph.mat", graphShader, new Color( 0.3f, 0.65f, 1f, 1f ) ); // Light Blue
-            CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FPS_FileIO_Graph.mat", graphShader, new Color( 0.5f, 1f, 0.5f, 1f ) ); // Light Green
 
             // Create spectrum material
             string spectrumShaderPath = "Packages/com.tayx.graphy.fmod/Shaders/SpectrumBars.shader";
@@ -206,7 +205,7 @@ namespace Tayx.Graphy
             Debug.Log( "[Graphy] FMOD module setup complete with materials!" );
         }
 
-        [MenuItem( "Tools/Graphy/Add CPU/GPU/FileIO Graphs to FPS Module" )]
+        [MenuItem( "Tools/Graphy/Add CPU/GPU Graphs to FPS Module" )]
         static void AddAdditionalGraphsToFpsModule()
         {
             // First generate materials
@@ -246,20 +245,17 @@ namespace Tayx.Graphy
                 containerRect.sizeDelta = Vector2.zero;
             }
 
-            // Create CPU, GPU, and FileIO graph images
+            // Create CPU and GPU graph images
             var cpuGraphGO = CreateGraphChild( "FPS_CPU_Graph", graphContainer, new Vector2( 0f, 60f ), new Vector2( 0f, 50f ) );
             var gpuGraphGO = CreateGraphChild( "FPS_GPU_Graph", graphContainer, new Vector2( 0f, 5f ), new Vector2( 0f, 50f ) );
-            var fileIOGraphGO = CreateGraphChild( "FPS_FileIO_Graph", graphContainer, new Vector2( 0f, -50f ), new Vector2( 0f, 50f ) );
 
             // Load materials
             Material cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_CPU_Graph.mat" );
             Material gpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_GPU_Graph.mat" );
-            Material fileIOMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_FileIO_Graph.mat" );
 
             // Apply materials
             if( cpuMat != null ) cpuGraphGO.GetComponent<Image>().material = cpuMat;
             if( gpuMat != null ) gpuGraphGO.GetComponent<Image>().material = gpuMat;
-            if( fileIOMat != null ) fileIOGraphGO.GetComponent<Image>().material = fileIOMat;
 
             // Add the additional graphs component
             additionalGraphs = fpsModule.AddComponent<Tayx.Graphy.Fps.G_FpsAdditionalGraphs>();
@@ -268,13 +264,12 @@ namespace Tayx.Graphy
             SerializedObject graphsSO = new SerializedObject( additionalGraphs );
             graphsSO.FindProperty( "m_cpuGraph" ).objectReferenceValue = cpuGraphGO.GetComponent<Image>();
             graphsSO.FindProperty( "m_gpuGraph" ).objectReferenceValue = gpuGraphGO.GetComponent<Image>();
-            graphsSO.FindProperty( "m_fileIOGraph" ).objectReferenceValue = fileIOGraphGO.GetComponent<Image>();
             graphsSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
                 UnityEngine.SceneManagement.SceneManager.GetActiveScene() );
 
-            Debug.Log( "[Graphy] Added CPU/GPU/FileIO graphs to FPS module!" );
+            Debug.Log( "[Graphy] Added CPU/GPU graphs to FPS module!" );
         }
 
         static void CreateMaterialIfMissing( string path, Shader shader, Color color )

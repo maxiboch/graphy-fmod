@@ -23,7 +23,6 @@ namespace Tayx.Graphy.Fps
 
         [SerializeField] private Image m_cpuGraph = null;
         [SerializeField] private Image m_gpuGraph = null;
-        [SerializeField] private Image m_fileIOGraph = null;
 
         [SerializeField] private Shader m_graphShader = null;
         [SerializeField] private bool m_isInitialized = false;
@@ -39,15 +38,12 @@ namespace Tayx.Graphy.Fps
 
         private G_GraphShader m_cpuGraphShader = null;
         private G_GraphShader m_gpuGraphShader = null;
-        private G_GraphShader m_fileIOGraphShader = null;
 
         private float[] m_cpuGraphArray;
         private float[] m_gpuGraphArray;
-        private float[] m_fileIOGraphArray;
 
         private float m_highestCpuValue = 0f;
         private float m_highestGpuValue = 0f;
-        private float m_highestFileIOValue = 0f;
 
         #endregion
 
@@ -143,53 +139,17 @@ namespace Tayx.Graphy.Fps
                 m_gpuGraphShader.CautionThreshold = 33.3f;  // 30 FPS
                 m_gpuGraphShader.UpdateThresholds();
             }
-
-            // Update File I/O graph (if FMOD is available)
-            #if GRAPHY_FMOD
-            if (m_fileIOGraphShader != null)
-            {
-                var fmodMonitor = GetComponent<Tayx.Graphy.Fmod.G_FmodMonitor>();
-                if (fmodMonitor != null && fmodMonitor.IsAvailable)
-                {
-                    float fileIO = fmodMonitor.CurrentFileUsageKBps;
-                    m_highestFileIOValue = Mathf.Max(m_highestFileIOValue, fileIO);
-
-                    for (int i = 0; i <= m_resolution - 1; i++)
-                    {
-                        if (i >= m_resolution - 1)
-                        {
-                            m_fileIOGraphArray[i] = fileIO;
-                        }
-                        else
-                        {
-                            m_fileIOGraphArray[i] = m_fileIOGraphArray[i + 1];
-                        }
-                    }
-
-                    m_fileIOGraphShader.ShaderArrayValues = m_fileIOGraphArray;
-                    m_fileIOGraphShader.UpdatePoints();
-                    m_fileIOGraphShader.UpdateArrayValuesLength();
-                    m_fileIOGraphShader.Average = fmodMonitor.AverageFileUsageKBps;
-                    m_fileIOGraphShader.UpdateAverage();
-                    m_fileIOGraphShader.GoodThreshold = 1000f;  // Good < 1000 KB/s
-                    m_fileIOGraphShader.CautionThreshold = 3000f;  // Caution 1000-3000 KB/s
-                    m_fileIOGraphShader.UpdateThresholds();
-                }
-            }
-            #endif
         }
 
         protected override void CreatePoints()
         {
             m_cpuGraphArray = new float[m_resolution];
             m_gpuGraphArray = new float[m_resolution];
-            m_fileIOGraphArray = new float[m_resolution];
 
             for (int i = 0; i < m_resolution; i++)
             {
                 m_cpuGraphArray[i] = 0;
                 m_gpuGraphArray[i] = 0;
-                m_fileIOGraphArray[i] = 0;
             }
 
             if (m_cpuGraphShader != null)
@@ -204,13 +164,6 @@ namespace Tayx.Graphy.Fps
                 m_gpuGraphShader.ShaderArrayValues = m_gpuGraphArray;
                 m_gpuGraphShader.UpdatePoints();
                 m_gpuGraphShader.UpdateArrayValuesLength();
-            }
-
-            if (m_fileIOGraphShader != null)
-            {
-                m_fileIOGraphShader.ShaderArrayValues = m_fileIOGraphArray;
-                m_fileIOGraphShader.UpdatePoints();
-                m_fileIOGraphShader.UpdateArrayValuesLength();
             }
         }
 
@@ -251,15 +204,6 @@ namespace Tayx.Graphy.Fps
                     Image = m_gpuGraph
                 };
                 m_gpuGraphShader.InitializeShader();
-            }
-
-            if (m_fileIOGraph != null && m_graphShader != null)
-            {
-                m_fileIOGraphShader = new G_GraphShader
-                {
-                    Image = m_fileIOGraph
-                };
-                m_fileIOGraphShader.InitializeShader();
             }
 
             UpdateParameters();
