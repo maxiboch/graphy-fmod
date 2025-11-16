@@ -30,6 +30,7 @@ namespace Tayx.Graphy.Fmod
         private IntPtr m_fmodSystem = IntPtr.Zero;
         private IntPtr m_masterChannelGroup = IntPtr.Zero;
         private bool m_isInitialized = false;
+        private bool m_initializationAttempted = false;
 
         // Pre-allocated buffers for GC-free operation
         private G_DoubleEndedQueue m_cpuSamples;
@@ -239,7 +240,9 @@ namespace Tayx.Graphy.Fmod
 
         private void TryInitializeFmod()
         {
-            if (m_isInitialized) return;
+            if (m_isInitialized || m_initializationAttempted) return;
+
+            m_initializationAttempted = true;
 
             try
             {
@@ -251,7 +254,56 @@ namespace Tayx.Graphy.Fmod
                 }
                 
                 // Try multiple approaches to get FMOD system
-                // Approach 1: Try FMODUnity.RuntimeManager (FMOD for Unity)
+                // Approach 1: Try custom Player class (for custom FMOD implementations)
+                var playerType = System.Type.GetType("Maxi.Audio.Player");
+                if (playerType != null)
+                {
+                    var servicesType = System.Type.GetType("Maxi.Audio.Services");
+                    if (servicesType != null)
+                    {
+                        var playerProp = servicesType.GetProperty("Player", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                        if (playerProp != null)
+                        {
+                            var playerInstance = playerProp.GetValue(null, null);
+                            if (playerInstance != null)
+                            {
+                                var systemProp = playerType.GetProperty("System");
+                                if (systemProp != null)
+                                {
+                                    var fmodSystemObj = systemProp.GetValue(playerInstance, null);
+                                    if (fmodSystemObj != null)
+                                    {
+                                        dynamic fmodSystem = fmodSystemObj;
+                                        if (fmodSystem.hasHandle())
+                                        {
+                                            m_fmodSystem = fmodSystem.handle;
+
+                                            // Get master channel group for audio metering
+                                            dynamic masterGroup;
+                                            var result = fmodSystem.getMasterChannelGroup(out masterGroup);
+                                            if (result.ToString() == "OK")
+                                            {
+                                                m_masterChannelGroup = masterGroup.handle;
+
+                                                // Enable metering on the master channel group
+                                                if (m_masterChannelGroup != IntPtr.Zero)
+                                                {
+                                                    masterGroup.setMeteringEnabled(true, true);
+                                                }
+                                            }
+
+                                            m_isInitialized = true;
+                                            Debug.Log("[Graphy] FMOD monitoring initialized successfully via custom Player");
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Approach 2: Try FMODUnity.RuntimeManager (FMOD for Unity)
                 var fmodUnityType = System.Type.GetType("FMODUnity.RuntimeManager, FMODUnity");
                 if (fmodUnityType != null)
                 {
@@ -292,8 +344,8 @@ namespace Tayx.Graphy.Fmod
                         }
                     }
                 }
-                
-                // Approach 2: Try RuntimeManager.CoreSystem (alternate FMOD Unity integration)
+
+                // Approach 3: Try RuntimeManager.CoreSystem (alternate FMOD Unity integration)
                 if (!m_isInitialized)
                 {
                     var coreSystemProp = fmodUnityType?.GetProperty("CoreSystem");
@@ -316,12 +368,13 @@ namespace Tayx.Graphy.Fmod
                         }
                     }
                 }
-                
-                // Approach 3: Try to find FMOD system through assembly scanning
+
+                // Approach 4: Try to find FMOD system through assembly scanning
                 if (!m_isInitialized)
                 {
                     // Look for any type in FMOD namespace
                     var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+                    bool fmodFound = false;
                     foreach (var assembly in assemblies)
                     {
                         try
@@ -331,16 +384,25 @@ namespace Tayx.Graphy.Fmod
                             {
                                 if (type.Namespace != null && type.Namespace.StartsWith("FMOD"))
                                 {
-                                    Debug.Log($"[Graphy] Found FMOD type: {type.FullName} in assembly {assembly.GetName().Name}");
-                                    // We found FMOD, but might not have a system reference yet
+                                    fmodFound = true;
                                     break;
                                 }
                             }
+                            if (fmodFound) break;
                         }
                         catch
                         {
                             // Skip assemblies we can't access
                         }
+                    }
+
+                    if (fmodFound)
+                    {
+                        Debug.LogWarning("[Graphy] FMOD types found but could not initialize FMOD monitoring. FMOD system may not be initialized yet.");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[Graphy] FMOD not detected. FMOD monitoring will be unavailable.");
                     }
                 }
             }
