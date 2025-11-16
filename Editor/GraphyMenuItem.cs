@@ -104,6 +104,30 @@ namespace Tayx.Graphy
             CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FPS_GPU_Graph.mat", graphShader, new Color( 0.3f, 0.65f, 1f, 1f ) ); // Light Blue
             CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FPS_FileIO_Graph.mat", graphShader, new Color( 0.5f, 1f, 0.5f, 1f ) ); // Light Green
 
+            // Create spectrum material
+            string spectrumShaderPath = "Packages/com.tayx.graphy.fmod/Shaders/SpectrumBars.shader";
+            Shader spectrumShader = AssetDatabase.LoadAssetAtPath<Shader>( spectrumShaderPath );
+
+            if( spectrumShader == null )
+            {
+                // Try alternate path
+                var spectrumGuids = AssetDatabase.FindAssets( "SpectrumBars t:Shader" );
+                if( spectrumGuids.Length > 0 )
+                {
+                    spectrumShaderPath = AssetDatabase.GUIDToAssetPath( spectrumGuids[0] );
+                    spectrumShader = AssetDatabase.LoadAssetAtPath<Shader>( spectrumShaderPath );
+                }
+            }
+
+            if( spectrumShader != null )
+            {
+                CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FMOD_Spectrum.mat", spectrumShader, new Color( 0f, 1f, 0f, 1f ) ); // Green
+            }
+            else
+            {
+                Debug.LogWarning( "[Graphy] Could not find SpectrumBars shader - spectrum material not created" );
+            }
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 

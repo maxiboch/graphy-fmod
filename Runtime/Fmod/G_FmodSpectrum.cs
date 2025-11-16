@@ -77,9 +77,29 @@ namespace Tayx.Graphy.Fmod
 
             m_barHeights = new float[m_barCount];
 
-            if (m_spectrumImage != null && m_spectrumMaterial != null)
+            // Initialize all bar heights to 0
+            for (int i = 0; i < m_barCount; i++)
             {
-                m_spectrumImage.material = m_spectrumMaterial;
+                m_barHeights[i] = 0f;
+            }
+
+            if (m_spectrumImage != null)
+            {
+                // If no material assigned, try to find the spectrum shader
+                if (m_spectrumMaterial == null)
+                {
+                    Shader spectrumShader = Shader.Find("Graphy/Spectrum Bars");
+                    if (spectrumShader != null)
+                    {
+                        m_spectrumMaterial = new Material(spectrumShader);
+                    }
+                }
+
+                if (m_spectrumMaterial != null)
+                {
+                    m_spectrumImage.material = m_spectrumMaterial;
+                    m_spectrumMaterial.SetInt("_BarCount", m_barCount);
+                }
             }
         }
 
