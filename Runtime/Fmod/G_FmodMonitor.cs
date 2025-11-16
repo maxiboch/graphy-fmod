@@ -278,11 +278,12 @@ namespace Tayx.Graphy.Fmod
                     if (servicesType != null)
                     {
                         Debug.Log("[Graphy] Found Maxi.Audio.Services type");
-                        var playerProp = servicesType.GetProperty("Player", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                        if (playerProp != null)
+                        // Try to get Player as a field (it's a public static field, not a property)
+                        var playerField = servicesType.GetField("Player", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                        if (playerField != null)
                         {
-                            Debug.Log("[Graphy] Found Services.Player property");
-                            var playerInstance = playerProp.GetValue(null, null);
+                            Debug.Log("[Graphy] Found Services.Player field");
+                            var playerInstance = playerField.GetValue(null);
                             if (playerInstance != null)
                             {
                                 Debug.Log("[Graphy] Player instance exists");
@@ -361,7 +362,7 @@ namespace Tayx.Graphy.Fmod
                         }
                         else
                         {
-                            Debug.LogWarning("[Graphy] Could not find Services.Player property");
+                            Debug.LogWarning("[Graphy] Could not find Services.Player field");
                         }
                     }
                     else
