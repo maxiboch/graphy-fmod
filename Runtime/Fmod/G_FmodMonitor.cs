@@ -256,49 +256,65 @@ namespace Tayx.Graphy.Fmod
                 var playerType = System.Type.GetType("Maxi.Audio.Player");
                 if (playerType != null)
                 {
+                    Debug.Log("[Graphy] Found Maxi.Audio.Player type");
                     var servicesType = System.Type.GetType("Maxi.Audio.Services");
                     if (servicesType != null)
                     {
+                        Debug.Log("[Graphy] Found Maxi.Audio.Services type");
                         var playerProp = servicesType.GetProperty("Player", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
                         if (playerProp != null)
                         {
+                            Debug.Log("[Graphy] Found Services.Player property");
                             var playerInstance = playerProp.GetValue(null, null);
                             if (playerInstance != null)
                             {
+                                Debug.Log("[Graphy] Player instance exists");
                                 // Check if Player is initialized
                                 var initializedProp = playerType.GetProperty("Initialized");
                                 if (initializedProp != null)
                                 {
                                     bool isPlayerInitialized = (bool)initializedProp.GetValue(playerInstance, null);
+                                    Debug.Log($"[Graphy] Player.Initialized = {isPlayerInitialized}");
                                     if (!isPlayerInitialized)
                                     {
                                         // Player exists but not initialized yet, keep waiting
+                                        Debug.Log("[Graphy] Player not initialized yet, waiting...");
                                         return;
                                     }
+                                }
+                                else
+                                {
+                                    Debug.LogWarning("[Graphy] Could not find Player.Initialized property");
                                 }
 
                                 var systemProp = playerType.GetProperty("System");
                                 if (systemProp != null)
                                 {
+                                    Debug.Log("[Graphy] Found Player.System property");
                                     var fmodSystemObj = systemProp.GetValue(playerInstance, null);
                                     if (fmodSystemObj != null)
                                     {
+                                        Debug.Log("[Graphy] Player.System object exists");
                                         dynamic fmodSystem = fmodSystemObj;
                                         if (fmodSystem.hasHandle())
                                         {
+                                            Debug.Log("[Graphy] FMOD System has valid handle");
                                             m_fmodSystem = fmodSystem.handle;
 
                                             // Get master channel group for audio metering
                                             dynamic masterGroup;
                                             var result = fmodSystem.getMasterChannelGroup(out masterGroup);
+                                            Debug.Log($"[Graphy] getMasterChannelGroup result: {result}");
                                             if (result.ToString() == "OK")
                                             {
                                                 m_masterChannelGroup = masterGroup.handle;
+                                                Debug.Log($"[Graphy] Master channel group handle: {m_masterChannelGroup}");
 
                                                 // Enable metering on the master channel group
                                                 if (m_masterChannelGroup != IntPtr.Zero)
                                                 {
                                                     masterGroup.setMeteringEnabled(true, true);
+                                                    Debug.Log("[Graphy] Metering enabled on master channel group");
                                                 }
                                             }
 
@@ -306,11 +322,39 @@ namespace Tayx.Graphy.Fmod
                                             Debug.Log("[Graphy] FMOD monitoring initialized successfully via custom Player");
                                             return;
                                         }
+                                        else
+                                        {
+                                            Debug.LogWarning("[Graphy] FMOD System does not have valid handle");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Debug.LogWarning("[Graphy] Player.System is null");
                                     }
                                 }
+                                else
+                                {
+                                    Debug.LogWarning("[Graphy] Could not find Player.System property");
+                                }
+                            }
+                            else
+                            {
+                                Debug.Log("[Graphy] Player instance is null, waiting for initialization...");
                             }
                         }
+                        else
+                        {
+                            Debug.LogWarning("[Graphy] Could not find Services.Player property");
+                        }
                     }
+                    else
+                    {
+                        Debug.LogWarning("[Graphy] Could not find Maxi.Audio.Services type");
+                    }
+                }
+                else
+                {
+                    Debug.Log("[Graphy] Maxi.Audio.Player type not found, trying other approaches...");
                 }
 
                 // Approach 2: Try FMODUnity.RuntimeManager (FMOD for Unity)
