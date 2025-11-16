@@ -55,7 +55,10 @@ namespace Tayx.Graphy.Fmod
         private FMOD.CPU_USAGE m_cpuUsage;
         private int m_currentAllocated;
         private int m_maxAllocated;
-        
+
+        // File usage tracking (for delta calculation since resetFileUsage doesn't exist)
+        private long m_previousTotalBytesRead = 0;
+
         // Audio metering
         private FMOD.DSP_METERING_INFO m_meteringInfo;
         private float[] m_rmsLevels = new float[32]; // Max 32 channels
@@ -526,24 +529,26 @@ namespace Tayx.Graphy.Fmod
                 result = system.getFileUsage(out sampleBytesRead, out streamBytesRead, out otherBytesRead);
                 if (result == FMOD.RESULT.OK)
                 {
-                    // Convert to KB/s (assuming our update interval)
-                    float totalBytesPerSecond = (sampleBytesRead + streamBytesRead + otherBytesRead) / m_updateInterval;
-                    CurrentFileUsageKBps = totalBytesPerSecond / 1024f;
+                    // getFileUsage returns cumulative values, so calculate delta
+                    long totalBytesRead = sampleBytesRead + streamBytesRead + otherBytesRead;
+                    long deltaBytes = totalBytesRead - m_previousTotalBytesRead;
+                    m_previousTotalBytesRead = totalBytesRead;
+
+                    // Convert delta to KB/s based on update interval
+                    if (deltaBytes > 0)
+                    {
+                        float bytesPerSecond = deltaBytes / m_updateInterval;
+                        CurrentFileUsageKBps = bytesPerSecond / 1024f;
+                    }
+                    else
+                    {
+                        CurrentFileUsageKBps = 0f;
+                    }
+
                     float avgFileUsage;
                     UpdateStatistic(m_fileUsageSamples, CurrentFileUsageKBps, ref m_fileUsageSum, out avgFileUsage);
                     AverageFileUsageKBps = avgFileUsage;
                     PeakFileUsageKBps = Mathf.Max(PeakFileUsageKBps, CurrentFileUsageKBps);
-
-                    // Reset the file usage counters after reading
-                    // Note: This might not be available in all FMOD versions
-                    try
-                    {
-                        system.resetFileUsage();
-                    }
-                    catch
-                    {
-                        // Ignore if resetFileUsage is not available
-                    }
                 }
 
                 // Get audio metering info
