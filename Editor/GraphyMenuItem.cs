@@ -175,68 +175,59 @@ namespace Tayx.Graphy
                 return;
             }
 
-            // Add CPU/GPU graphs if they don't exist
+            // Find the graph container - try different possible names
             Transform graphContainer = fpsModule.Find( "FPS_Graph_Container" );
             if( graphContainer == null )
             {
-                Debug.LogWarning( "[Graphy] FPS_Graph_Container not found!" );
+                graphContainer = fpsModule.Find( "Graph_Container" );
+            }
+            if( graphContainer == null )
+            {
+                // Look for fps_graph as parent
+                Transform fpsGraph = fpsModule.Find( "fps_graph" );
+                if( fpsGraph != null )
+                {
+                    graphContainer = fpsGraph;
+                }
+            }
+
+            if( graphContainer == null )
+            {
+                Debug.LogWarning( "[Graphy] FPS graph container not found! Tried: FPS_Graph_Container, Graph_Container, fps_graph" );
                 return;
             }
 
-            // Create or find CPU graph
-            Transform cpuGraph = graphContainer.Find( "FPS_CPU_Graph" );
-            if( cpuGraph == null )
+            Debug.Log( $"[Graphy] Found FPS graph container: {graphContainer.name}" );
+
+            // Load materials
+            Material cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_CPU_Graph.mat" );
+            Material gpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_GPU_Graph.mat" );
+
+            if( cpuMat == null || gpuMat == null )
             {
-                GameObject cpuGraphObj = new GameObject( "FPS_CPU_Graph" );
-                cpuGraphObj.transform.SetParent( graphContainer, false );
-
-                RectTransform cpuRect = cpuGraphObj.AddComponent<RectTransform>();
-                cpuRect.anchorMin = new Vector2( 0, 0 );
-                cpuRect.anchorMax = new Vector2( 1, 0 );
-                cpuRect.pivot = new Vector2( 0.5f, 0 );
-                cpuRect.anchoredPosition = new Vector2( 0, 55 );  // Stack above main graph
-                cpuRect.sizeDelta = new Vector2( 0, 25 );
-
-                Image cpuImage = cpuGraphObj.AddComponent<Image>();
-                Material cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_CPU_Graph.mat" );
-                if( cpuMat != null ) cpuImage.material = cpuMat;
-
-                cpuGraph = cpuGraphObj.transform;
-                Debug.Log( "[Graphy] Created FPS_CPU_Graph" );
+                Debug.LogWarning( "[Graphy] FPS materials not found! Generating..." );
+                GenerateFmodMaterials();
+                cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_CPU_Graph.mat" );
+                gpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_GPU_Graph.mat" );
             }
+
+            // Create or find CPU graph
+            Image cpuImage = SetupGraphImage( graphContainer, "FPS_CPU_Graph", new Vector2( 0, 55 ), new Vector2( 0, 25 ), cpuMat );
 
             // Create or find GPU graph
-            Transform gpuGraph = graphContainer.Find( "FPS_GPU_Graph" );
-            if( gpuGraph == null )
-            {
-                GameObject gpuGraphObj = new GameObject( "FPS_GPU_Graph" );
-                gpuGraphObj.transform.SetParent( graphContainer, false );
-
-                RectTransform gpuRect = gpuGraphObj.AddComponent<RectTransform>();
-                gpuRect.anchorMin = new Vector2( 0, 0 );
-                gpuRect.anchorMax = new Vector2( 1, 0 );
-                gpuRect.pivot = new Vector2( 0.5f, 0 );
-                gpuRect.anchoredPosition = new Vector2( 0, 85 );  // Stack above CPU graph
-                gpuRect.sizeDelta = new Vector2( 0, 25 );
-
-                Image gpuImage = gpuGraphObj.AddComponent<Image>();
-                Material gpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_GPU_Graph.mat" );
-                if( gpuMat != null ) gpuImage.material = gpuMat;
-
-                gpuGraph = gpuGraphObj.transform;
-                Debug.Log( "[Graphy] Created FPS_GPU_Graph" );
-            }
+            Image gpuImage = SetupGraphImage( graphContainer, "FPS_GPU_Graph", new Vector2( 0, 85 ), new Vector2( 0, 25 ), gpuMat );
 
             // Wire up the G_FpsAdditionalGraphs component
             var additionalGraphs = fpsModule.GetComponent<Tayx.Graphy.Fps.G_FpsAdditionalGraphs>();
             if( additionalGraphs == null )
             {
                 additionalGraphs = fpsModule.gameObject.AddComponent<Tayx.Graphy.Fps.G_FpsAdditionalGraphs>();
+                Debug.Log( "[Graphy] Added G_FpsAdditionalGraphs component" );
             }
 
             SerializedObject so = new SerializedObject( additionalGraphs );
-            so.FindProperty( "m_cpuGraph" ).objectReferenceValue = cpuGraph.GetComponent<Image>();
-            so.FindProperty( "m_gpuGraph" ).objectReferenceValue = gpuGraph.GetComponent<Image>();
+            so.FindProperty( "m_cpuGraph" ).objectReferenceValue = cpuImage;
+            so.FindProperty( "m_gpuGraph" ).objectReferenceValue = gpuImage;
             so.ApplyModifiedProperties();
 
             // Fix text field widths - make them wider to avoid "###"
@@ -290,8 +281,222 @@ namespace Tayx.Graphy
 
         static void SetupFmodModule( GraphyManager graphyManager )
         {
-            // This will call the existing setup function
-            SetupFmodModuleWithMaterials();
+            // Find FMOD module
+            Transform fmodModule = graphyManager.transform.Find( "FMOD - Module" );
+            if( fmodModule == null )
+            {
+                Debug.LogWarning( "[Graphy] FMOD module not found!" );
+                return;
+            }
+
+            var fmodManager = fmodModule.GetComponent<G_FmodManager>();
+            if( fmodManager == null )
+            {
+                Debug.LogError( "[Graphy] FMOD module has no G_FmodManager component!" );
+                return;
+            }
+
+            Debug.Log( "[Graphy] Setting up FMOD module..." );
+
+            // 1. Setup graphs with materials
+            SetupFmodGraphs( fmodManager );
+
+            // 2. Add spectrum and audio levels components
+            AddSpectrumAndAudioLevels( fmodManager );
+
+            // 3. Fix module size and position
+            FixFmodModuleLayout( fmodModule );
+
+            // 4. Wire up text references
+            WireFmodTextReferences( fmodManager );
+
+            Debug.Log( "[Graphy] FMOD module setup complete!" );
+        }
+
+        static void SetupFmodGraphs( G_FmodManager fmodManager )
+        {
+            GameObject fmodModule = fmodManager.gameObject;
+
+            // Load materials
+            Material cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_CPU_Graph.mat" );
+            Material memMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_Memory_Graph.mat" );
+            Material channelsMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_Channels_Graph.mat" );
+            Material fileIOMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_FileIO_Graph.mat" );
+
+            if( cpuMat == null )
+            {
+                Debug.LogWarning( "[Graphy] FMOD materials not found! Generating..." );
+                GenerateFmodMaterials();
+                cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_CPU_Graph.mat" );
+                memMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_Memory_Graph.mat" );
+                channelsMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_Channels_Graph.mat" );
+                fileIOMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_FileIO_Graph.mat" );
+            }
+
+            // Get the graph component
+            var fmodGraph = fmodManager.GetComponent<G_FmodGraph>();
+            if( fmodGraph == null )
+            {
+                fmodGraph = fmodModule.AddComponent<G_FmodGraph>();
+                Debug.Log( "[Graphy] Added G_FmodGraph component" );
+            }
+
+            // Find or create graph container
+            Transform graphContainer = fmodModule.transform.Find( "FMOD_Graph" );
+            if( graphContainer == null )
+            {
+                graphContainer = fmodModule.transform.Find( "Graph_Container" );
+            }
+            if( graphContainer == null )
+            {
+                GameObject containerObj = new GameObject( "Graph_Container" );
+                containerObj.transform.SetParent( fmodModule.transform, false );
+                RectTransform containerRect = containerObj.AddComponent<RectTransform>();
+                containerRect.anchorMin = Vector2.zero;
+                containerRect.anchorMax = Vector2.one;
+                containerRect.offsetMin = Vector2.zero;
+                containerRect.offsetMax = Vector2.zero;
+                graphContainer = containerObj.transform;
+                Debug.Log( "[Graphy] Created Graph_Container" );
+            }
+
+            // Create graphs stacked vertically - simple clean layout
+            Image cpuImage = SetupGraphImage( graphContainer, "CPU_Graph", new Vector2( 0, 165 ), new Vector2( -10, 70 ), cpuMat );
+            Image memImage = SetupGraphImage( graphContainer, "Memory_Graph", new Vector2( 0, 90 ), new Vector2( -10, 70 ), memMat );
+            Image channelsImage = SetupGraphImage( graphContainer, "Channels_Graph", new Vector2( 0, 15 ), new Vector2( -10, 70 ), channelsMat );
+            Image fileIOImage = SetupGraphImage( graphContainer, "FileIO_Graph", new Vector2( 0, -60 ), new Vector2( -10, 70 ), fileIOMat );
+
+            // Wire up the references in G_FmodGraph
+            SerializedObject graphSO = new SerializedObject( fmodGraph );
+            graphSO.FindProperty( "m_cpuGraph" ).objectReferenceValue = cpuImage;
+            graphSO.FindProperty( "m_memoryGraph" ).objectReferenceValue = memImage;
+            graphSO.FindProperty( "m_channelsGraph" ).objectReferenceValue = channelsImage;
+            graphSO.FindProperty( "m_fileIOGraph" ).objectReferenceValue = fileIOImage;
+            graphSO.ApplyModifiedProperties();
+
+            Debug.Log( "[Graphy] FMOD graphs created and wired up" );
+        }
+
+        static void AddSpectrumAndAudioLevels( G_FmodManager fmodManager )
+        {
+            GameObject fmodModule = fmodManager.gameObject;
+
+            // Add components using reflection to avoid compile-time dependency
+            System.Type spectrumType = System.Type.GetType("Tayx.Graphy.Fmod.G_FmodSpectrum, Tayx.Graphy");
+            System.Type audioLevelsType = System.Type.GetType("Tayx.Graphy.Fmod.G_FmodAudioLevels, Tayx.Graphy");
+
+            if( spectrumType != null )
+            {
+                var spectrum = fmodModule.GetComponent(spectrumType);
+                if( spectrum == null )
+                {
+                    fmodModule.AddComponent(spectrumType);
+                    Debug.Log( "[Graphy] Added G_FmodSpectrum component" );
+                }
+            }
+
+            if( audioLevelsType != null )
+            {
+                var audioLevels = fmodModule.GetComponent(audioLevelsType);
+                if( audioLevels == null )
+                {
+                    fmodModule.AddComponent(audioLevelsType);
+                    Debug.Log( "[Graphy] Added G_FmodAudioLevels component" );
+                }
+            }
+        }
+
+        static void FixFmodModuleLayout( Transform fmodModule )
+        {
+            RectTransform rect = fmodModule.GetComponent<RectTransform>();
+            if( rect != null )
+            {
+                // Make module taller to fit all graphs and move it down to not overlap RAM
+                rect.sizeDelta = new Vector2( 330f, 320f );  // Increased height
+                rect.anchoredPosition = new Vector2( -180f, -360f );  // Moved down more
+
+                Debug.Log( "[Graphy] Fixed FMOD module size and position" );
+            }
+
+            // Fix background images to contain all graphs
+            Transform fullBg = fmodModule.Find( "BG_Image_FULL" );
+            Transform textBg = fmodModule.Find( "BG_Image_TEXT" );
+            Transform basicBg = fmodModule.Find( "BG_Image_BASIC" );
+
+            if( fullBg != null )
+            {
+                RectTransform bgRect = fullBg.GetComponent<RectTransform>();
+                bgRect.anchorMin = Vector2.zero;
+                bgRect.anchorMax = Vector2.one;
+                bgRect.offsetMin = Vector2.zero;
+                bgRect.offsetMax = Vector2.zero;
+            }
+            if( textBg != null )
+            {
+                RectTransform bgRect = textBg.GetComponent<RectTransform>();
+                bgRect.anchorMin = Vector2.zero;
+                bgRect.anchorMax = Vector2.one;
+                bgRect.offsetMin = Vector2.zero;
+                bgRect.offsetMax = Vector2.zero;
+            }
+            if( basicBg != null )
+            {
+                RectTransform bgRect = basicBg.GetComponent<RectTransform>();
+                bgRect.anchorMin = Vector2.zero;
+                bgRect.anchorMax = Vector2.one;
+                bgRect.offsetMin = Vector2.zero;
+                bgRect.offsetMax = Vector2.zero;
+            }
+        }
+
+        static void WireFmodTextReferences( G_FmodManager fmodManager )
+        {
+            var fmodText = fmodManager.GetComponent<G_FmodText>();
+            if( fmodText == null )
+            {
+                Debug.LogWarning( "[Graphy] No G_FmodText component found" );
+                return;
+            }
+
+            Transform fmodModule = fmodManager.transform;
+            Transform textContainer = fmodModule.Find( "FMOD_Text" );
+            if( textContainer == null )
+            {
+                Debug.LogWarning( "[Graphy] No FMOD_Text container found" );
+                return;
+            }
+
+            SerializedObject textSO = new SerializedObject( fmodText );
+
+            // Find and wire up text components
+            Transform cpuCurrent = textContainer.Find( "FMOD_CPU_Current" );
+            Transform cpuAvg = textContainer.Find( "FMOD_CPU_Avg" );
+            Transform cpuPeak = textContainer.Find( "FMOD_CPU_Peak" );
+            Transform memCurrent = textContainer.Find( "FMOD_Memory_Current" );
+            Transform memAvg = textContainer.Find( "FMOD_Memory_Avg" );
+            Transform memPeak = textContainer.Find( "FMOD_Memory_Peak" );
+            Transform chCurrent = textContainer.Find( "FMOD_Channels_Current" );
+            Transform chAvg = textContainer.Find( "FMOD_Channels_Avg" );
+            Transform chPeak = textContainer.Find( "FMOD_Channels_Peak" );
+            Transform fileCurrent = textContainer.Find( "FMOD_FileUsage_Current" );
+            Transform fileAvg = textContainer.Find( "FMOD_FileUsage_Avg" );
+            Transform filePeak = textContainer.Find( "FMOD_FileUsage_Peak" );
+
+            if( cpuCurrent != null ) textSO.FindProperty( "m_fmodCpuText" ).objectReferenceValue = cpuCurrent.GetComponent<Text>();
+            if( cpuAvg != null ) textSO.FindProperty( "m_fmodCpuAvgText" ).objectReferenceValue = cpuAvg.GetComponent<Text>();
+            if( cpuPeak != null ) textSO.FindProperty( "m_fmodCpuPeakText" ).objectReferenceValue = cpuPeak.GetComponent<Text>();
+            if( memCurrent != null ) textSO.FindProperty( "m_fmodMemoryText" ).objectReferenceValue = memCurrent.GetComponent<Text>();
+            if( memAvg != null ) textSO.FindProperty( "m_fmodMemoryAvgText" ).objectReferenceValue = memAvg.GetComponent<Text>();
+            if( memPeak != null ) textSO.FindProperty( "m_fmodMemoryPeakText" ).objectReferenceValue = memPeak.GetComponent<Text>();
+            if( chCurrent != null ) textSO.FindProperty( "m_channelsText" ).objectReferenceValue = chCurrent.GetComponent<Text>();
+            if( chAvg != null ) textSO.FindProperty( "m_channelsAvgText" ).objectReferenceValue = chAvg.GetComponent<Text>();
+            if( chPeak != null ) textSO.FindProperty( "m_channelsPeakText" ).objectReferenceValue = chPeak.GetComponent<Text>();
+            if( fileCurrent != null ) textSO.FindProperty( "m_fileUsageText" ).objectReferenceValue = fileCurrent.GetComponent<Text>();
+            if( fileAvg != null ) textSO.FindProperty( "m_fileUsageAvgText" ).objectReferenceValue = fileAvg.GetComponent<Text>();
+            if( filePeak != null ) textSO.FindProperty( "m_fileUsagePeakText" ).objectReferenceValue = filePeak.GetComponent<Text>();
+
+            textSO.ApplyModifiedProperties();
+            Debug.Log( "[Graphy] Wired up FMOD text references" );
         }
 
         [MenuItem( "Tools/Graphy/Setup FMOD Module with Materials and Layout" )]
