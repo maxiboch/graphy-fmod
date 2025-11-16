@@ -265,6 +265,18 @@ namespace Tayx.Graphy.Fmod
                             var playerInstance = playerProp.GetValue(null, null);
                             if (playerInstance != null)
                             {
+                                // Check if Player is initialized
+                                var initializedProp = playerType.GetProperty("Initialized");
+                                if (initializedProp != null)
+                                {
+                                    bool isPlayerInitialized = (bool)initializedProp.GetValue(playerInstance, null);
+                                    if (!isPlayerInitialized)
+                                    {
+                                        // Player exists but not initialized yet, keep waiting
+                                        return;
+                                    }
+                                }
+
                                 var systemProp = playerType.GetProperty("System");
                                 if (systemProp != null)
                                 {

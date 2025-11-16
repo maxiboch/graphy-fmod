@@ -94,11 +94,11 @@ namespace Tayx.Graphy.Fps
 
             // Update CPU statistics
             UpdateCpuStatistics( cpuTime );
-            AverageCPU = m_cpuAverageWindowSum / m_cpuSamples.Count;
-            
-            // Update GPU statistics  
+            AverageCPU = m_cpuSamples.Count > 0 ? m_cpuAverageWindowSum / m_cpuSamples.Count : 0f;
+
+            // Update GPU statistics
             UpdateGpuStatistics( gpuTime );
-            AverageGPU = m_gpuAverageWindowSum / m_gpuSamples.Count;
+            AverageGPU = m_gpuSamples.Count > 0 ? m_gpuAverageWindowSum / m_gpuSamples.Count : 0f;
 
             // Update FPS percent lows
             short samplesBelowOnePercent = (short) Mathf.Min( m_fpsSamplesCount - 1, m_onePercentSamples );
