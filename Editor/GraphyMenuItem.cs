@@ -319,6 +319,12 @@ namespace Tayx.Graphy
             Text fileAvg     = CreateTextChild( "FMOD_FileUsage_Avg", textContainer.transform, font, new Vector2( 160f, -rowHeight * 3f ), "Avg: N/A" );
             Text filePeak    = CreateTextChild( "FMOD_FileUsage_Peak", textContainer.transform, font, new Vector2( 310f, -rowHeight * 3f ), "Peak: N/A" );
 
+            // Audio Level Meters (optional - can be added later)
+            // TODO: Add audio level meter UI elements here
+
+            // Spectrum Visualization (optional - can be added later)
+            // TODO: Add spectrum visualization UI elements here
+
             var managerSO = new SerializedObject( fmodManager );
             managerSO.FindProperty( "m_fmodGraphGameObject" ).objectReferenceValue = graphContainer;
             managerSO.FindProperty( "m_fmodTextGameObject" ).objectReferenceValue = textContainer;
