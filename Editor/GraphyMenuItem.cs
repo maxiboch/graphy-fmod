@@ -246,7 +246,7 @@ namespace Tayx.Graphy
             rectTransform.anchorMin = new Vector2( 1f, 1f );
             rectTransform.anchorMax = new Vector2( 1f, 1f );
             rectTransform.pivot = new Vector2( 0.5f, 0.5f );
-            rectTransform.sizeDelta = new Vector2( 330f, 180f );
+            rectTransform.sizeDelta = new Vector2( 330f, 280f );  // Increased height for 4 graphs
             rectTransform.anchoredPosition = new Vector2( -180f, -320f );
 
             var fmodManager = root.AddComponent<G_FmodManager>();
@@ -262,20 +262,22 @@ namespace Tayx.Graphy
             textBg.SetActive( false );
             basicBg.SetActive( false );
 
-            // Graph container and images
+            // Graph container
             var graphContainer = new GameObject( "FMOD_Graph", typeof( RectTransform ) );
             graphContainer.transform.SetParent( root.transform, false );
             var graphRect = graphContainer.GetComponent<RectTransform>();
-            graphRect.anchorMin = new Vector2( 0f, 0.5f );
+            graphRect.anchorMin = new Vector2( 0f, 0f );
             graphRect.anchorMax = new Vector2( 1f, 1f );
-            graphRect.pivot = new Vector2( 0.5f, 1f );
+            graphRect.pivot = new Vector2( 0.5f, 0.5f );
             graphRect.anchoredPosition = Vector2.zero;
-            graphRect.sizeDelta = new Vector2( -10f, -10f );
+            graphRect.sizeDelta = Vector2.zero;
 
-            var cpuImage = CreateImageChild( "CPU_Graph", graphContainer.transform, Color.white );
-            var memoryImage = CreateImageChild( "Memory_Graph", graphContainer.transform, Color.white );
-            var channelsImage = CreateImageChild( "Channels_Graph", graphContainer.transform, Color.white );
-            var fileIOImage = CreateImageChild( "FileIO_Graph", graphContainer.transform, Color.white );
+            // Create 4 graphs stacked vertically with proper spacing
+            // Layout: CPU (top), Memory, Channels, FileIO (bottom)
+            var cpuImage = CreateGraphChild( "CPU_Graph", graphContainer.transform, new Vector2( 13f, 235f ), new Vector2( -5.32f, 60f ) );
+            var memoryImage = CreateGraphChild( "Memory_Graph", graphContainer.transform, new Vector2( 13f, 165f ), new Vector2( -5.32f, 60f ) );
+            var channelsImage = CreateGraphChild( "Channels_Graph", graphContainer.transform, new Vector2( 13f, 95f ), new Vector2( -5.32f, 60f ) );
+            var fileIOImage = CreateGraphChild( "FileIO_Graph", graphContainer.transform, new Vector2( 13f, 25f ), new Vector2( -5.32f, 60f ) );
 
             // Text container
             var textContainer = new GameObject( "FMOD_Text", typeof( RectTransform ) );
@@ -397,6 +399,25 @@ namespace Tayx.Graphy
 
             var img = go.GetComponent<Image>();
             img.color = color;
+            img.raycastTarget = false;
+
+            return go;
+        }
+
+        static GameObject CreateGraphChild( string name, Transform parent, Vector2 anchoredPosition, Vector2 sizeDelta )
+        {
+            var go = new GameObject( name, typeof( RectTransform ), typeof( CanvasRenderer ), typeof( Image ) );
+            go.transform.SetParent( parent, false );
+
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2( 0f, 0f );
+            rt.anchorMax = new Vector2( 1f, 0f );
+            rt.pivot = new Vector2( 0.5f, 0.5f );
+            rt.anchoredPosition = anchoredPosition;
+            rt.sizeDelta = sizeDelta;
+
+            var img = go.GetComponent<Image>();
+            img.color = Color.white;
             img.raycastTarget = false;
 
             return go;
