@@ -188,11 +188,17 @@ namespace Tayx.Graphy.Fmod
 
         public void UpdateParameters()
         {
-            // This can be called to refresh settings from GraphyManager
-            if (m_graphyManager != null)
+            // Refresh settings from GraphyManager (called from G_FmodManager / GraphyManager)
+            if( m_graphyManager == null )
             {
-                // Get any FMOD-specific settings if added to GraphyManager
+                return;
             }
+
+#if GRAPHY_FMOD
+            // Sync FFT spectrum settings
+            FFTEnabled   = m_graphyManager.FmodEnableSpectrum;
+            SpectrumSize = m_graphyManager.FmodSpectrumSize;
+#endif // GRAPHY_FMOD
         }
 
         public void Reset()

@@ -215,10 +215,19 @@ namespace Tayx.Graphy
         // FMOD --------------------------------------------------------------------------
 
         [SerializeField] private ModuleState m_fmodModuleState = ModuleState.OFF;
-        
+
         [Range( 10, 300 )] [SerializeField] private int m_fmodGraphResolution = 150;
-        
+
         [Range( 1, 200 )] [SerializeField] private int m_fmodTextUpdateRate = 3; // 3 updates per sec.
+
+        [Tooltip( "Enables FFT spectrum analysis for FMOD audio." )]
+        [SerializeField] private bool m_fmodEnableSpectrum = false;
+
+        [Tooltip( "FFT window size for FMOD spectrum. Must be a power of 2 between 128 and 8192." )]
+        [SerializeField] private int m_fmodSpectrumSize = 512;
+
+        [Tooltip( "Base color used for FMOD spectrum visualization." )]
+        [SerializeField] private Color m_fmodSpectrumColor = Color.green;
 #endif // GRAPHY_FMOD
 
         // Advanced ----------------------------------------------------------------------
@@ -308,6 +317,12 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                 m_audioManager.SetPosition( m_graphModulePosition, m_graphModuleOffset );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                if( m_fmodManager != null )
+                {
+                    m_fmodManager.SetPosition( m_graphModulePosition, m_graphModuleOffset );
+                }
+#endif // GRAPHY_FMOD
             }
         }
 
@@ -670,37 +685,93 @@ namespace Tayx.Graphy
 
 #if GRAPHY_FMOD
         // FMOD --------------------------------------------------------------------------
-        
+
         public ModuleState FmodModuleState
         {
             get => m_fmodModuleState;
             set
             {
                 m_fmodModuleState = value;
-                if (m_fmodManager != null)
-                    m_fmodManager.SetState(m_fmodModuleState);
+                if( m_fmodManager != null )
+                {
+                    m_fmodManager.SetState( m_fmodModuleState );
+                }
             }
         }
-        
+
         public int FmodGraphResolution
         {
             get => m_fmodGraphResolution;
             set
             {
                 m_fmodGraphResolution = value;
-                if (m_fmodManager != null)
+                if( m_fmodManager != null )
+                {
                     m_fmodManager.UpdateParameters();
+                }
             }
         }
-        
+
         public float FmodTextUpdateRate
         {
             get => 1f / m_fmodTextUpdateRate;
             set
             {
-                m_fmodTextUpdateRate = Mathf.RoundToInt(1f / value);
-                if (m_fmodManager != null)
+                m_fmodTextUpdateRate = Mathf.RoundToInt( 1f / Mathf.Max( value, 0.0001f ) );
+                if( m_fmodManager != null )
+                {
                     m_fmodManager.UpdateParameters();
+                }
+            }
+        }
+
+        public bool FmodEnableSpectrum
+        {
+            get => m_fmodEnableSpectrum;
+            set
+            {
+                m_fmodEnableSpectrum = value;
+                if( m_fmodManager != null )
+                {
+                    m_fmodManager.UpdateParameters();
+                }
+            }
+        }
+
+        public int FmodSpectrumSize
+        {
+            get => m_fmodSpectrumSize;
+            set
+            {
+                int clamped = Mathf.Clamp( value, 128, 8192 );
+                int closestPowerOf2 = 128;
+                for( int i = 128; i <= 8192; i *= 2 )
+                {
+                    if( Mathf.Abs( clamped - i ) < Mathf.Abs( clamped - closestPowerOf2 ) )
+                    {
+                        closestPowerOf2 = i;
+                    }
+                }
+
+                m_fmodSpectrumSize = closestPowerOf2;
+
+                if( m_fmodManager != null )
+                {
+                    m_fmodManager.UpdateParameters();
+                }
+            }
+        }
+
+        public Color FmodSpectrumColor
+        {
+            get => m_fmodSpectrumColor;
+            set
+            {
+                m_fmodSpectrumColor = value;
+                if( m_fmodManager != null )
+                {
+                    m_fmodManager.UpdateParameters();
+                }
             }
         }
 #endif // GRAPHY_FMOD
@@ -1141,6 +1212,15 @@ namespace Tayx.Graphy
                 m_audioManager.SetPosition( m_graphModulePosition, m_graphModuleOffset );
                 m_audioManager.SetState( m_audioModuleState );
 #endif // GRAPHY_BUILTIN_AUDIO
+
+#if GRAPHY_FMOD
+                if( m_fmodManager != null )
+                {
+                    m_fmodManager.SetPosition( m_graphModulePosition, m_graphModuleOffset );
+                    m_fmodManager.SetState( m_fmodModuleState );
+                    m_fmodManager.UpdateParameters();
+                }
+#endif // GRAPHY_FMOD
             }
         }
 
@@ -1317,6 +1397,12 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
             m_audioManager.UpdateParameters();
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+            if( m_fmodManager != null )
+            {
+                m_fmodManager.UpdateParameters();
+            }
+#endif // GRAPHY_FMOD
             m_advancedData.UpdateParameters();
         }
 
@@ -1327,6 +1413,12 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
             m_audioManager.RefreshParameters();
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+            if( m_fmodManager != null )
+            {
+                m_fmodManager.RefreshParameters();
+            }
+#endif // GRAPHY_FMOD
             m_advancedData.RefreshParameters();
         }
 

@@ -211,23 +211,36 @@ namespace Tayx.Graphy
                 gpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_GPU_Graph.mat" );
             }
 
-            // Find the main FPS graph and make it full width at the top
+            // Lay out FPS, CPU and GPU graphs as 3 stacked rows, filling the available height
+            RectTransform graphRect = graphContainer.GetComponent<RectTransform>();
+            float totalHeight = graphRect != null ? graphRect.rect.height : 0f;
+            if( totalHeight <= 0f )
+            {
+                // Fallback to a reasonable default if the rect height is not yet initialized
+                totalHeight = 90f;
+            }
+
+            float rowHeight   = totalHeight / 3f;
+            float graphHeight = rowHeight; // Each graph takes one row
+
+            // Main FPS graph at the very top row
             Transform mainFpsGraph = graphContainer.Find( "Image_Graph" );
             if( mainFpsGraph != null )
             {
                 RectTransform mainRect = mainFpsGraph.GetComponent<RectTransform>();
-                mainRect.anchorMin = new Vector2( 0, 0 );
-                mainRect.anchorMax = new Vector2( 1, 0 );
-                mainRect.pivot = new Vector2( 0.5f, 0 );
-                mainRect.anchoredPosition = new Vector2( 0, 60 );  // At the top
-                mainRect.sizeDelta = new Vector2( 0, 30 );  // Full width, 30px tall
+                mainRect.anchorMin  = new Vector2( 0f, 0f );
+                mainRect.anchorMax  = new Vector2( 1f, 0f );
+                mainRect.pivot      = new Vector2( 0.5f, 0.5f );
+                mainRect.sizeDelta  = new Vector2( 0f, graphHeight );
+                // Center of the top row (rows from bottom: 0 = GPU, 1 = CPU, 2 = FPS)
+                mainRect.anchoredPosition = new Vector2( 0f, rowHeight * 2.5f );
             }
 
-            // GPU graph below main FPS (positions are SWAPPED - GPU is y=85, CPU is y=55)
-            Image gpuImage = SetupGraphImage( graphContainer, "FPS_GPU_Graph", new Vector2( 0, 30 ), new Vector2( 0, 25 ), gpuMat );
+            // CPU graph in the middle row (directly below FPS)
+            Image cpuImage = SetupGraphImage( graphContainer, "FPS_CPU_Graph", new Vector2( 0f, rowHeight * 1.5f ), new Vector2( 0f, graphHeight ), cpuMat );
 
-            // CPU graph at bottom
-            Image cpuImage = SetupGraphImage( graphContainer, "FPS_CPU_Graph", new Vector2( 0, 0 ), new Vector2( 0, 25 ), cpuMat );
+            // GPU graph in the bottom row
+            Image gpuImage = SetupGraphImage( graphContainer, "FPS_GPU_Graph", new Vector2( 0f, rowHeight * 0.5f ), new Vector2( 0f, graphHeight ), gpuMat );
 
             // Wire up the G_FpsAdditionalGraphs component
             var additionalGraphs = fpsModule.GetComponent<Tayx.Graphy.Fps.G_FpsAdditionalGraphs>();
@@ -411,6 +424,17 @@ namespace Tayx.Graphy
 
             if( graphContainer != null )
             {
+                // Use the available height (or screen height) to scale spectrum and audio levels
+                RectTransform graphRect = graphContainer.GetComponent<RectTransform>();
+                float baseHeight = graphRect != null ? Mathf.Abs( graphRect.rect.height ) : (float)Screen.height;
+                if( baseHeight <= 0f )
+                {
+                    baseHeight = Screen.height;
+                }
+
+                float spectrumHeight = Mathf.Clamp( baseHeight * 0.25f, 80f, baseHeight * 0.5f );
+                float audioHeight    = Mathf.Clamp( baseHeight * 0.15f, 50f, baseHeight * 0.3f );
+
                 // Create spectrum visualization at the bottom (below FileIO graph)
                 Transform spectrumTransform = graphContainer.Find( "Spectrum_Graph" );
                 if( spectrumTransform == null )
@@ -422,14 +446,23 @@ namespace Tayx.Graphy
                     spectrumRect.anchorMin = new Vector2( 0f, 0f );
                     spectrumRect.anchorMax = new Vector2( 1f, 0f );
                     spectrumRect.pivot = new Vector2( 0.5f, 0.5f );
-                    spectrumRect.anchoredPosition = new Vector2( 0, -30 );  // Below FileIO
-                    spectrumRect.sizeDelta = new Vector2( -10, 70 );
+                    spectrumRect.anchoredPosition = new Vector2( 0f, -30f );  // Keep it just under FileIO, but taller
+                    spectrumRect.sizeDelta = new Vector2( -10f, spectrumHeight );
 
                     Image spectrumImage = spectrumObj.GetComponent<Image>();
                     spectrumImage.material = spectrumMat;
 
                     spectrumTransform = spectrumObj.transform;
                     Debug.Log( "[Graphy] Created Spectrum_Graph" );
+                }
+                else
+                {
+                    // If it already exists, still ensure it uses the scaled height
+                    RectTransform spectrumRect = spectrumTransform.GetComponent<RectTransform>();
+                    if( spectrumRect != null )
+                    {
+                        spectrumRect.sizeDelta = new Vector2( spectrumRect.sizeDelta.x, spectrumHeight );
+                    }
                 }
 
                 // Create audio levels container
@@ -443,18 +476,28 @@ namespace Tayx.Graphy
                     containerRect.anchorMin = new Vector2( 0f, 0f );
                     containerRect.anchorMax = new Vector2( 1f, 0f );
                     containerRect.pivot = new Vector2( 0.5f, 0.5f );
-                    containerRect.anchoredPosition = new Vector2( 0, -105 );  // Below spectrum
-                    containerRect.sizeDelta = new Vector2( -10, 40 );
+                    containerRect.anchoredPosition = new Vector2( 0f, -105f );  // Keep under spectrum
+                    containerRect.sizeDelta = new Vector2( -10f, audioHeight );
 
                     audioLevelsContainer = containerObj.transform;
 
                     // Create 4 bars: Left RMS, Right RMS, Left Peak, Right Peak
-                    CreateAudioBar( audioLevelsContainer, "LeftRMS_Bar", new Vector2( 5, 0 ), new Vector2( 75, 35 ), new Color(0.3f, 1f, 0.3f, 0.5f) );
-                    CreateAudioBar( audioLevelsContainer, "RightRMS_Bar", new Vector2( 85, 0 ), new Vector2( 75, 35 ), new Color(0.3f, 1f, 0.3f, 0.5f) );
-                    CreateAudioBar( audioLevelsContainer, "LeftPeak_Bar", new Vector2( 165, 0 ), new Vector2( 75, 35 ), new Color(1f, 1f, 0f, 0.8f) );
-                    CreateAudioBar( audioLevelsContainer, "RightPeak_Bar", new Vector2( 245, 0 ), new Vector2( 75, 35 ), new Color(1f, 1f, 0f, 0.8f) );
+                    CreateAudioBar( audioLevelsContainer, "LeftRMS_Bar",  new Vector2( 5f,   0f ), new Vector2( 75f, audioHeight * 0.875f ), new Color( 0.3f, 1f, 0.3f, 0.5f ) );
+                    CreateAudioBar( audioLevelsContainer, "RightRMS_Bar", new Vector2( 85f,  0f ), new Vector2( 75f, audioHeight * 0.875f ), new Color( 0.3f, 1f, 0.3f, 0.5f ) );
+                    CreateAudioBar( audioLevelsContainer, "LeftPeak_Bar", new Vector2( 165f, 0f ), new Vector2( 75f, audioHeight * 0.875f ), new Color( 1f, 1f, 0f, 0.8f ) );
+                    CreateAudioBar( audioLevelsContainer, "RightPeak_Bar",new Vector2( 245f, 0f ), new Vector2( 75f, audioHeight * 0.875f ), new Color( 1f, 1f, 0f, 0.8f ) );
 
                     Debug.Log( "[Graphy] Created AudioLevels_Container with 4 bars" );
+                }
+                else
+                {
+                    RectTransform containerRect = audioLevelsContainer.GetComponent<RectTransform>();
+                    if( containerRect != null )
+                    {
+                        containerRect.sizeDelta = new Vector2( containerRect.sizeDelta.x, audioHeight );
+                    }
+
+                    // Bars already exist; we leave their positions alone but they will stretch with the new height.
                 }
             }
 

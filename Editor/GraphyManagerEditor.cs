@@ -287,6 +287,10 @@ namespace Tayx.Graphy
 
             m_fmodTextUpdateRate = serObj.FindProperty( "m_fmodTextUpdateRate" );
 
+            m_fmodEnableSpectrum = serObj.FindProperty( "m_fmodEnableSpectrum" );
+            m_fmodSpectrumSize   = serObj.FindProperty( "m_fmodSpectrumSize" );
+            m_fmodSpectrumColor  = serObj.FindProperty( "m_fmodSpectrumColor" );
+
 #endif // GRAPHY_FMOD
             #endregion
 
@@ -998,46 +1002,49 @@ namespace Tayx.Graphy
                         // FFT Spectrum settings
                         GUILayout.Space( 10 );
                         EditorGUILayout.LabelField( "FFT Spectrum Analysis:", EditorStyles.boldLabel );
-                        
+
                         EditorGUI.indentLevel++;
-                        
-                        bool enableSpectrum = EditorGUILayout.Toggle
+
+                        EditorGUILayout.PropertyField
                         (
+                            m_fmodEnableSpectrum,
                             new GUIContent
                             (
                                 text: "Enable FFT Spectrum",
                                 tooltip: "Enables FFT spectrum analysis for frequency visualization"
-                            ),
-                            false // TODO: Add actual property when added to GraphyManager
+                            )
                         );
-                        
-                        if( enableSpectrum )
+
+                        if( m_fmodEnableSpectrum.boolValue )
                         {
-                            int spectrumSize = EditorGUILayout.IntSlider
+                            // FFT size (stored as power-of-2 clamped value)
+                            m_fmodSpectrumSize.intValue = EditorGUILayout.IntSlider
                             (
                                 new GUIContent
                                 (
                                     text: "FFT Size",
                                     tooltip: "FFT window size. Higher values = better frequency resolution but more CPU usage. Must be power of 2."
                                 ),
-                                512,
+                                m_fmodSpectrumSize.intValue,
                                 leftValue: 128,
                                 rightValue: 8192
                             );
-                            
-                            // Force power of 2
+
+                            int size = m_fmodSpectrumSize.intValue;
                             int closestPowerOf2 = 128;
                             for( int i = 128; i <= 8192; i *= 2 )
                             {
-                                if( Mathf.Abs(spectrumSize - i) < Mathf.Abs(spectrumSize - closestPowerOf2) )
+                                if( Mathf.Abs( size - i ) < Mathf.Abs( size - closestPowerOf2 ) )
                                 {
                                     closestPowerOf2 = i;
                                 }
                             }
-                            
-                            EditorGUILayout.HelpBox($"FFT spectrum analysis provides frequency data for audio visualization. Size will be: {closestPowerOf2}", MessageType.Info);
+
+                            m_fmodSpectrumSize.intValue = closestPowerOf2;
+
+                            EditorGUILayout.HelpBox( $"FFT spectrum analysis provides frequency data for audio visualization. Size will be: {closestPowerOf2}", MessageType.Info );
                         }
-                        
+
                         EditorGUI.indentLevel--;
                     }
 

@@ -1,5 +1,14 @@
 # Changelog - Graphy-FMOD Fork
 
+## [v3.1.6] - 2025-11-16
+
+### Changed - Layout & FMOD Spectrum Wiring
+- FPS module layout updated so the main FPS graph is at the top, CPU graph above GPU, and all graphs share the available height.
+- FMOD module repositioned so it no longer overlaps RAM and respects GraphModulePosition/Offset.
+- FMOD spectrum and RMS/peak meters now scale their height based on the available screen/graph area.
+- FMOD FFT spectrum toggle in GraphyManager inspector is fully wired to runtime settings in G_FmodMonitor.
+
+
 ## [v3.1.2] - 2025-11-14
 
 ### Fixed - FMOD Package Detection (Core Engine)
