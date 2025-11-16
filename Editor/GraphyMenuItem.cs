@@ -163,11 +163,15 @@ namespace Tayx.Graphy
                 return;
             }
 
-            // Find or create graph container
-            Transform graphContainer = fmodModule.transform.Find( "Graph_Container" );
+            // Find graph container (try both names for compatibility)
+            Transform graphContainer = fmodModule.transform.Find( "FMOD_Graph" );
             if( graphContainer == null )
             {
-                Debug.LogError( "[Graphy] No Graph_Container found in FMOD module!" );
+                graphContainer = fmodModule.transform.Find( "Graph_Container" );
+            }
+            if( graphContainer == null )
+            {
+                Debug.LogError( "[Graphy] No FMOD_Graph or Graph_Container found in FMOD module!" );
                 return;
             }
 
@@ -186,6 +190,47 @@ namespace Tayx.Graphy
             graphSO.FindProperty( "m_channelsGraph" ).objectReferenceValue = channelsImage;
             graphSO.FindProperty( "m_fileIOGraph" ).objectReferenceValue = fileIOImage;
             graphSO.ApplyModifiedProperties();
+
+            // Also wire up text references if they exist
+            var fmodText = fmodManager.GetComponent<G_FmodText>();
+            if( fmodText != null )
+            {
+                Transform textContainer = fmodModule.transform.Find( "FMOD_Text" );
+                if( textContainer != null )
+                {
+                    SerializedObject textSO = new SerializedObject( fmodText );
+
+                    // Find and wire up text components
+                    Transform cpuCurrent = textContainer.Find( "FMOD_CPU_Current" );
+                    Transform cpuAvg = textContainer.Find( "FMOD_CPU_Avg" );
+                    Transform cpuPeak = textContainer.Find( "FMOD_CPU_Peak" );
+                    Transform memCurrent = textContainer.Find( "FMOD_Memory_Current" );
+                    Transform memAvg = textContainer.Find( "FMOD_Memory_Avg" );
+                    Transform memPeak = textContainer.Find( "FMOD_Memory_Peak" );
+                    Transform chCurrent = textContainer.Find( "FMOD_Channels_Current" );
+                    Transform chAvg = textContainer.Find( "FMOD_Channels_Avg" );
+                    Transform chPeak = textContainer.Find( "FMOD_Channels_Peak" );
+                    Transform fileCurrent = textContainer.Find( "FMOD_FileUsage_Current" );
+                    Transform fileAvg = textContainer.Find( "FMOD_FileUsage_Avg" );
+                    Transform filePeak = textContainer.Find( "FMOD_FileUsage_Peak" );
+
+                    if( cpuCurrent != null ) textSO.FindProperty( "m_fmodCpuText" ).objectReferenceValue = cpuCurrent.GetComponent<Text>();
+                    if( cpuAvg != null ) textSO.FindProperty( "m_fmodCpuAvgText" ).objectReferenceValue = cpuAvg.GetComponent<Text>();
+                    if( cpuPeak != null ) textSO.FindProperty( "m_fmodCpuPeakText" ).objectReferenceValue = cpuPeak.GetComponent<Text>();
+                    if( memCurrent != null ) textSO.FindProperty( "m_fmodMemoryText" ).objectReferenceValue = memCurrent.GetComponent<Text>();
+                    if( memAvg != null ) textSO.FindProperty( "m_fmodMemoryAvgText" ).objectReferenceValue = memAvg.GetComponent<Text>();
+                    if( memPeak != null ) textSO.FindProperty( "m_fmodMemoryPeakText" ).objectReferenceValue = memPeak.GetComponent<Text>();
+                    if( chCurrent != null ) textSO.FindProperty( "m_channelsText" ).objectReferenceValue = chCurrent.GetComponent<Text>();
+                    if( chAvg != null ) textSO.FindProperty( "m_channelsAvgText" ).objectReferenceValue = chAvg.GetComponent<Text>();
+                    if( chPeak != null ) textSO.FindProperty( "m_channelsPeakText" ).objectReferenceValue = chPeak.GetComponent<Text>();
+                    if( fileCurrent != null ) textSO.FindProperty( "m_fileUsageText" ).objectReferenceValue = fileCurrent.GetComponent<Text>();
+                    if( fileAvg != null ) textSO.FindProperty( "m_fileUsageAvgText" ).objectReferenceValue = fileAvg.GetComponent<Text>();
+                    if( filePeak != null ) textSO.FindProperty( "m_fileUsagePeakText" ).objectReferenceValue = filePeak.GetComponent<Text>();
+
+                    textSO.ApplyModifiedProperties();
+                    Debug.Log( "[Graphy] Wired up FMOD text references" );
+                }
+            }
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
                 UnityEngine.SceneManagement.SceneManager.GetActiveScene() );
