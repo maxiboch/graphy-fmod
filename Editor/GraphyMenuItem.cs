@@ -20,6 +20,32 @@ namespace Tayx.Graphy
 {
     public class GraphyMenuItem
     {
+        [MenuItem( "Tools/Graphy/Complete Setup (All Modules)" )]
+        static void CompleteSetup()
+        {
+            // Find Graphy in the scene
+            GraphyManager graphyManager = Object.FindObjectOfType<GraphyManager>();
+            if( graphyManager == null )
+            {
+                Debug.LogError( "[Graphy] No GraphyManager found in scene. Please add Graphy to the scene first." );
+                return;
+            }
+
+            Debug.Log( "[Graphy] Starting complete setup..." );
+
+            // 1. Generate materials if they don't exist
+            GenerateFmodMaterials();
+            GenerateFpsMaterials();
+
+            // 2. Setup FPS module with CPU/GPU graphs
+            SetupFpsModule( graphyManager );
+
+            // 3. Setup FMOD module with all graphs and components
+            SetupFmodModule( graphyManager );
+
+            Debug.Log( "[Graphy] Complete setup finished!" );
+        }
+
         [MenuItem( "Tools/Graphy/Create Prefab Variant" )]
         static void CreatePrefabVariant()
         {
@@ -131,6 +157,141 @@ namespace Tayx.Graphy
             AssetDatabase.Refresh();
 
             Debug.Log( "[Graphy] Generated FMOD and FPS graph materials!" );
+        }
+
+        static void GenerateFpsMaterials()
+        {
+            // This is now handled in GenerateFmodMaterials() above
+            // Keeping this as a separate function for clarity
+        }
+
+        static void SetupFpsModule( GraphyManager graphyManager )
+        {
+            // Find FPS module
+            Transform fpsModule = graphyManager.transform.Find( "FPS - Module" );
+            if( fpsModule == null )
+            {
+                Debug.LogWarning( "[Graphy] FPS module not found!" );
+                return;
+            }
+
+            // Add CPU/GPU graphs if they don't exist
+            Transform graphContainer = fpsModule.Find( "FPS_Graph_Container" );
+            if( graphContainer == null )
+            {
+                Debug.LogWarning( "[Graphy] FPS_Graph_Container not found!" );
+                return;
+            }
+
+            // Create or find CPU graph
+            Transform cpuGraph = graphContainer.Find( "FPS_CPU_Graph" );
+            if( cpuGraph == null )
+            {
+                GameObject cpuGraphObj = new GameObject( "FPS_CPU_Graph" );
+                cpuGraphObj.transform.SetParent( graphContainer, false );
+
+                RectTransform cpuRect = cpuGraphObj.AddComponent<RectTransform>();
+                cpuRect.anchorMin = new Vector2( 0, 0 );
+                cpuRect.anchorMax = new Vector2( 1, 0 );
+                cpuRect.pivot = new Vector2( 0.5f, 0 );
+                cpuRect.anchoredPosition = new Vector2( 0, 55 );  // Stack above main graph
+                cpuRect.sizeDelta = new Vector2( 0, 25 );
+
+                Image cpuImage = cpuGraphObj.AddComponent<Image>();
+                Material cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_CPU_Graph.mat" );
+                if( cpuMat != null ) cpuImage.material = cpuMat;
+
+                cpuGraph = cpuGraphObj.transform;
+                Debug.Log( "[Graphy] Created FPS_CPU_Graph" );
+            }
+
+            // Create or find GPU graph
+            Transform gpuGraph = graphContainer.Find( "FPS_GPU_Graph" );
+            if( gpuGraph == null )
+            {
+                GameObject gpuGraphObj = new GameObject( "FPS_GPU_Graph" );
+                gpuGraphObj.transform.SetParent( graphContainer, false );
+
+                RectTransform gpuRect = gpuGraphObj.AddComponent<RectTransform>();
+                gpuRect.anchorMin = new Vector2( 0, 0 );
+                gpuRect.anchorMax = new Vector2( 1, 0 );
+                gpuRect.pivot = new Vector2( 0.5f, 0 );
+                gpuRect.anchoredPosition = new Vector2( 0, 85 );  // Stack above CPU graph
+                gpuRect.sizeDelta = new Vector2( 0, 25 );
+
+                Image gpuImage = gpuGraphObj.AddComponent<Image>();
+                Material gpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_GPU_Graph.mat" );
+                if( gpuMat != null ) gpuImage.material = gpuMat;
+
+                gpuGraph = gpuGraphObj.transform;
+                Debug.Log( "[Graphy] Created FPS_GPU_Graph" );
+            }
+
+            // Wire up the G_FpsAdditionalGraphs component
+            var additionalGraphs = fpsModule.GetComponent<Tayx.Graphy.Fps.G_FpsAdditionalGraphs>();
+            if( additionalGraphs == null )
+            {
+                additionalGraphs = fpsModule.gameObject.AddComponent<Tayx.Graphy.Fps.G_FpsAdditionalGraphs>();
+            }
+
+            SerializedObject so = new SerializedObject( additionalGraphs );
+            so.FindProperty( "m_cpuGraph" ).objectReferenceValue = cpuGraph.GetComponent<Image>();
+            so.FindProperty( "m_gpuGraph" ).objectReferenceValue = gpuGraph.GetComponent<Image>();
+            so.ApplyModifiedProperties();
+
+            // Fix text field widths - make them wider to avoid "###"
+            FixFpsTextWidths( fpsModule );
+
+            Debug.Log( "[Graphy] FPS module setup complete!" );
+        }
+
+        static void FixFpsTextWidths( Transform fpsModule )
+        {
+            // Find all the CPU/GPU text fields and make them wider
+            string[] textNames = new string[]
+            {
+                "cpu_ms_text_value",
+                "gpu_ms_text_value",
+                "avg_cpu_ms_value",
+                "avg_gpu_ms_value",
+                "1%_cpu_ms_value",
+                "1%_gpu_ms_value",
+                "0.1%_cpu_ms_value",
+                "0.1%_gpu_ms_value"
+            };
+
+            foreach( string textName in textNames )
+            {
+                Transform textTransform = FindDeepChild( fpsModule, textName );
+                if( textTransform != null )
+                {
+                    RectTransform rect = textTransform.GetComponent<RectTransform>();
+                    if( rect != null )
+                    {
+                        // Make text fields wider (increase width by 20-30 pixels)
+                        rect.sizeDelta = new Vector2( rect.sizeDelta.x + 30, rect.sizeDelta.y );
+                    }
+                }
+            }
+        }
+
+        static Transform FindDeepChild( Transform parent, string name )
+        {
+            foreach( Transform child in parent )
+            {
+                if( child.name == name )
+                    return child;
+                Transform result = FindDeepChild( child, name );
+                if( result != null )
+                    return result;
+            }
+            return null;
+        }
+
+        static void SetupFmodModule( GraphyManager graphyManager )
+        {
+            // This will call the existing setup function
+            SetupFmodModuleWithMaterials();
         }
 
         [MenuItem( "Tools/Graphy/Setup FMOD Module with Materials and Layout" )]
