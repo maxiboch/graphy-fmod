@@ -815,6 +815,13 @@ namespace Tayx.Graphy
                     break;
 #endif // GRAPHY_BUILTIN_AUDIO
 
+#if GRAPHY_FMOD
+                case ModuleType.FMOD:
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( moduleState );
+                    break;
+#endif // GRAPHY_FMOD
+
                 case ModuleType.ADVANCED:
                     m_advancedData.SetState( moduleState );
                     break;
@@ -847,6 +854,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.OFF );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.OFF );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.OFF );
                     break;
 
@@ -856,6 +867,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.OFF );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.OFF );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.OFF );
                     break;
 
@@ -865,6 +880,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.OFF );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.OFF );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.OFF );
                     break;
 
@@ -874,6 +893,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.OFF );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.OFF );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.OFF );
                     break;
 
@@ -883,6 +906,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.OFF );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.OFF );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.OFF );
                     break;
 
@@ -892,6 +919,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.OFF );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.FULL );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.OFF );
                     break;
 
@@ -901,6 +932,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.TEXT );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.OFF );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.OFF );
                     break;
 
@@ -910,6 +945,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.TEXT );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.OFF );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.OFF );
                     break;
 
@@ -919,6 +958,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.TEXT );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.FULL );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.OFF );
                     break;
 
@@ -928,6 +971,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.FULL );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.FULL );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.OFF );
                     break;
 
@@ -937,6 +984,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.FULL );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.FULL );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.FULL );
                     break;
 
@@ -946,6 +997,10 @@ namespace Tayx.Graphy
 #if GRAPHY_BUILTIN_AUDIO
                     m_audioManager.SetState( ModuleState.OFF );
 #endif // GRAPHY_BUILTIN_AUDIO
+#if GRAPHY_FMOD
+                    if (m_fmodManager != null)
+                        m_fmodManager.SetState( ModuleState.OFF );
+#endif // GRAPHY_FMOD
                     m_advancedData.SetState( ModuleState.FULL );
                     break;
 
