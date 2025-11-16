@@ -27,6 +27,7 @@ namespace Tayx.Graphy.Fmod
         [SerializeField] private Image m_cpuGraph = null;
         [SerializeField] private Image m_memoryGraph = null;
         [SerializeField] private Image m_channelsGraph = null;
+        [SerializeField] private Image m_fileIOGraph = null;
 
         [SerializeField] private Shader m_graphShader = null;
         [SerializeField] private bool m_isInitialized = false;
@@ -43,14 +44,17 @@ namespace Tayx.Graphy.Fmod
         private G_GraphShader m_cpuGraphShader = null;
         private G_GraphShader m_memoryGraphShader = null;
         private G_GraphShader m_channelsGraphShader = null;
+        private G_GraphShader m_fileIOGraphShader = null;
 
         private float[] m_cpuGraphArray;
         private float[] m_memoryGraphArray;
         private float[] m_channelsGraphArray;
+        private float[] m_fileIOGraphArray;
 
         private float m_highestCpuValue = 0f;
         private float m_highestMemoryValue = 0f;
         private float m_highestChannelsValue = 0f;
+        private float m_highestFileIOValue = 0f;
 
         #endregion
 
@@ -184,6 +188,34 @@ namespace Tayx.Graphy.Fmod
                 m_channelsGraphShader.CautionThreshold = 64f;
                 m_channelsGraphShader.UpdateThresholds();
             }
+
+            // Update File I/O graph
+            if (m_fileIOGraphShader != null)
+            {
+                float fileIOValue = m_fmodMonitor.CurrentFileUsageKBps;
+                m_highestFileIOValue = Mathf.Max(m_highestFileIOValue, fileIOValue);
+
+                for (int i = 0; i <= m_resolution - 1; i++)
+                {
+                    if (i >= m_resolution - 1)
+                    {
+                        m_fileIOGraphArray[i] = fileIOValue;
+                    }
+                    else
+                    {
+                        m_fileIOGraphArray[i] = m_fileIOGraphArray[i + 1];
+                    }
+                }
+
+                m_fileIOGraphShader.ShaderArrayValues = m_fileIOGraphArray;
+                m_fileIOGraphShader.UpdatePoints();
+                m_fileIOGraphShader.UpdateArrayValuesLength();
+                m_fileIOGraphShader.Average = m_fmodMonitor.AverageFileUsageKBps;
+                m_fileIOGraphShader.UpdateAverage();
+                m_fileIOGraphShader.GoodThreshold = 1000f;  // Good < 1000 KB/s
+                m_fileIOGraphShader.CautionThreshold = 3000f;  // Caution 1000-3000 KB/s, Critical > 3000 KB/s
+                m_fileIOGraphShader.UpdateThresholds();
+            }
         }
 
         protected override void CreatePoints()
@@ -191,12 +223,14 @@ namespace Tayx.Graphy.Fmod
             m_cpuGraphArray = new float[m_resolution];
             m_memoryGraphArray = new float[m_resolution];
             m_channelsGraphArray = new float[m_resolution];
+            m_fileIOGraphArray = new float[m_resolution];
 
             for (int i = 0; i < m_resolution; i++)
             {
                 m_cpuGraphArray[i] = 0;
                 m_memoryGraphArray[i] = 0;
                 m_channelsGraphArray[i] = 0;
+                m_fileIOGraphArray[i] = 0;
             }
 
             if (m_cpuGraphShader != null)
@@ -218,6 +252,13 @@ namespace Tayx.Graphy.Fmod
                 m_channelsGraphShader.ShaderArrayValues = m_channelsGraphArray;
                 m_channelsGraphShader.UpdatePoints();
                 m_channelsGraphShader.UpdateArrayValuesLength();
+            }
+
+            if (m_fileIOGraphShader != null)
+            {
+                m_fileIOGraphShader.ShaderArrayValues = m_fileIOGraphArray;
+                m_fileIOGraphShader.UpdatePoints();
+                m_fileIOGraphShader.UpdateArrayValuesLength();
             }
         }
 
@@ -270,6 +311,16 @@ namespace Tayx.Graphy.Fmod
                 };
 
                 m_channelsGraphShader.InitializeShader();
+            }
+
+            if (m_fileIOGraph != null && m_graphShader != null)
+            {
+                m_fileIOGraphShader = new G_GraphShader
+                {
+                    Image = m_fileIOGraph
+                };
+
+                m_fileIOGraphShader.InitializeShader();
             }
 
             UpdateParameters();

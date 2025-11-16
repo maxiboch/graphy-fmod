@@ -70,6 +70,67 @@ namespace Tayx.Graphy
             GenerateFmodModulePrefabIfMissing();
         }
 
+        [MenuItem( "Tools/Graphy/Generate FMOD Materials" )]
+        static void GenerateFmodMaterials()
+        {
+            EnsureFolder( "Assets/graphy-fmod" );
+            EnsureFolder( "Assets/graphy-fmod/Materials" );
+
+            // Find the graph shader
+            string shaderPath = "Packages/com.tayx.graphy.fmod/Shaders/GraphStandard.shader";
+            Shader graphShader = AssetDatabase.LoadAssetAtPath<Shader>( shaderPath );
+
+            if( graphShader == null )
+            {
+                // Try alternate path
+                shaderPath = AssetDatabase.GUIDToAssetPath( AssetDatabase.FindAssets( "GraphStandard t:Shader" )[0] );
+                graphShader = AssetDatabase.LoadAssetAtPath<Shader>( shaderPath );
+            }
+
+            if( graphShader == null )
+            {
+                Debug.LogError( "[Graphy] Could not find GraphStandard shader!" );
+                return;
+            }
+
+            // Create FMOD materials
+            CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FMOD_CPU_Graph.mat", graphShader, new Color( 1f, 0.8f, 0f, 1f ) ); // Yellow
+            CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FMOD_Memory_Graph.mat", graphShader, new Color( 0f, 1f, 1f, 1f ) ); // Cyan
+            CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FMOD_Channels_Graph.mat", graphShader, new Color( 1f, 0.5f, 1f, 1f ) ); // Pink
+            CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FMOD_FileIO_Graph.mat", graphShader, new Color( 0.5f, 1f, 0.5f, 1f ) ); // Light Green
+
+            // Create FPS module CPU/GPU materials
+            CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FPS_CPU_Graph.mat", graphShader, new Color( 1f, 0.65f, 0f, 1f ) ); // Orange
+            CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FPS_GPU_Graph.mat", graphShader, new Color( 0.3f, 0.65f, 1f, 1f ) ); // Light Blue
+            CreateMaterialIfMissing( "Assets/graphy-fmod/Materials/FPS_FileIO_Graph.mat", graphShader, new Color( 0.5f, 1f, 0.5f, 1f ) ); // Light Green
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log( "[Graphy] Generated FMOD and FPS graph materials!" );
+        }
+
+        static void CreateMaterialIfMissing( string path, Shader shader, Color color )
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<Material>( path );
+            if( existing != null )
+            {
+                Debug.Log( $"[Graphy] Material already exists at '{path}'." );
+                return;
+            }
+
+            Material mat = new Material( shader );
+            mat.SetColor( "_Color", color );
+            mat.SetColor( "_GoodColor", new Color( 0.3f, 1f, 0.3f, 1f ) );
+            mat.SetColor( "_CautionColor", new Color( 1f, 1f, 0f, 1f ) );
+            mat.SetColor( "_CriticalColor", new Color( 1f, 0.3f, 0.3f, 1f ) );
+            mat.SetFloat( "_GoodThreshold", 60f );
+            mat.SetFloat( "_CautionThreshold", 30f );
+
+            AssetDatabase.CreateAsset( mat, path );
+            Debug.Log( $"[Graphy] Created material at '{path}'." );
+        }
+
         static void GenerateFmodModulePrefabIfMissing()
         {
             const string prefabPath = "Assets/graphy-fmod/Prefab/Internal/FMOD - Module.prefab";
@@ -142,6 +203,7 @@ namespace Tayx.Graphy
             var cpuImage = CreateImageChild( "CPU_Graph", graphContainer.transform, Color.white );
             var memoryImage = CreateImageChild( "Memory_Graph", graphContainer.transform, Color.white );
             var channelsImage = CreateImageChild( "Channels_Graph", graphContainer.transform, Color.white );
+            var fileIOImage = CreateImageChild( "FileIO_Graph", graphContainer.transform, Color.white );
 
             // Text container
             var textContainer = new GameObject( "FMOD_Text", typeof( RectTransform ) );
@@ -194,10 +256,11 @@ namespace Tayx.Graphy
             bgList.GetArrayElementAtIndex( 2 ).objectReferenceValue = basicBg;
 
             var graphsList = managerSO.FindProperty( "m_graphsImages" );
-            graphsList.arraySize = 3;
+            graphsList.arraySize = 4;
             graphsList.GetArrayElementAtIndex( 0 ).objectReferenceValue = cpuImage.GetComponent<Image>();
             graphsList.GetArrayElementAtIndex( 1 ).objectReferenceValue = memoryImage.GetComponent<Image>();
             graphsList.GetArrayElementAtIndex( 2 ).objectReferenceValue = channelsImage.GetComponent<Image>();
+            graphsList.GetArrayElementAtIndex( 3 ).objectReferenceValue = fileIOImage.GetComponent<Image>();
 
             managerSO.ApplyModifiedPropertiesWithoutUndo();
 
@@ -205,6 +268,7 @@ namespace Tayx.Graphy
             graphSO.FindProperty( "m_cpuGraph" ).objectReferenceValue = cpuImage.GetComponent<Image>();
             graphSO.FindProperty( "m_memoryGraph" ).objectReferenceValue = memoryImage.GetComponent<Image>();
             graphSO.FindProperty( "m_channelsGraph" ).objectReferenceValue = channelsImage.GetComponent<Image>();
+            graphSO.FindProperty( "m_fileIOGraph" ).objectReferenceValue = fileIOImage.GetComponent<Image>();
             graphSO.ApplyModifiedPropertiesWithoutUndo();
 
             var textSO = new SerializedObject( fmodText );
