@@ -133,7 +133,7 @@ namespace Tayx.Graphy
             Debug.Log( "[Graphy] Generated FMOD and FPS graph materials!" );
         }
 
-        [MenuItem( "Tools/Graphy/Setup FMOD Module with Materials" )]
+        [MenuItem( "Tools/Graphy/Setup FMOD Module with Materials and Layout" )]
         static void SetupFmodModuleWithMaterials()
         {
             // First generate materials
@@ -146,6 +146,8 @@ namespace Tayx.Graphy
                 Debug.LogError( "[Graphy] No FMOD module found in scene! Please add Graphy prefab first." );
                 return;
             }
+
+            GameObject fmodModule = fmodManager.gameObject;
 
             // Load materials
             Material cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_CPU_Graph.mat" );
@@ -161,48 +163,65 @@ namespace Tayx.Graphy
                 return;
             }
 
-            // Apply materials using SerializedObject
+            // Find or create graph container
+            Transform graphContainer = fmodModule.transform.Find( "Graph_Container" );
+            if( graphContainer == null )
+            {
+                Debug.LogError( "[Graphy] No Graph_Container found in FMOD module!" );
+                return;
+            }
+
+            // Find or create the 4 graph images with correct layout
+            Image cpuImage = SetupGraphImage( graphContainer, "CPU_Graph", new Vector2( 13f, 175.55f ), new Vector2( -5.32f, 94.713f ), cpuMat );
+            Image memImage = SetupGraphImage( graphContainer, "Memory_Graph", new Vector2( 13.52f, 85f ), new Vector2( -6.36f, 71.13f ), memMat );
+            Image channelsImage = SetupGraphImage( graphContainer, "Channels_Graph", new Vector2( 13.52f, 5.685f ), new Vector2( -6.36f, 71.13f ), channelsMat );
+
+            // Check if FileIO graph exists, if not create it
+            Image fileIOImage = SetupGraphImage( graphContainer, "FileIO_Graph", new Vector2( 13.52f, -65f ), new Vector2( -6.36f, 71.13f ), fileIOMat );
+
+            // Wire up the references in G_FmodGraph
             SerializedObject graphSO = new SerializedObject( fmodGraph );
-
-            var cpuGraphProp = graphSO.FindProperty( "m_cpuGraph" );
-            var memGraphProp = graphSO.FindProperty( "m_memoryGraph" );
-            var channelsGraphProp = graphSO.FindProperty( "m_channelsGraph" );
-            var fileIOGraphProp = graphSO.FindProperty( "m_fileIOGraph" );
-
-            if( cpuGraphProp.objectReferenceValue != null && cpuMat != null )
-            {
-                Image cpuImage = cpuGraphProp.objectReferenceValue as Image;
-                cpuImage.material = cpuMat;
-                Debug.Log( "[Graphy] Applied CPU material" );
-            }
-
-            if( memGraphProp.objectReferenceValue != null && memMat != null )
-            {
-                Image memImage = memGraphProp.objectReferenceValue as Image;
-                memImage.material = memMat;
-                Debug.Log( "[Graphy] Applied Memory material" );
-            }
-
-            if( channelsGraphProp.objectReferenceValue != null && channelsMat != null )
-            {
-                Image channelsImage = channelsGraphProp.objectReferenceValue as Image;
-                channelsImage.material = channelsMat;
-                Debug.Log( "[Graphy] Applied Channels material" );
-            }
-
-            if( fileIOGraphProp.objectReferenceValue != null && fileIOMat != null )
-            {
-                Image fileIOImage = fileIOGraphProp.objectReferenceValue as Image;
-                fileIOImage.material = fileIOMat;
-                Debug.Log( "[Graphy] Applied File I/O material" );
-            }
-
+            graphSO.FindProperty( "m_cpuGraph" ).objectReferenceValue = cpuImage;
+            graphSO.FindProperty( "m_memoryGraph" ).objectReferenceValue = memImage;
+            graphSO.FindProperty( "m_channelsGraph" ).objectReferenceValue = channelsImage;
+            graphSO.FindProperty( "m_fileIOGraph" ).objectReferenceValue = fileIOImage;
             graphSO.ApplyModifiedProperties();
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
                 UnityEngine.SceneManagement.SceneManager.GetActiveScene() );
 
-            Debug.Log( "[Graphy] FMOD module setup complete with materials!" );
+            Debug.Log( "[Graphy] FMOD module setup complete with materials and layout!" );
+        }
+
+        static Image SetupGraphImage( Transform parent, string name, Vector2 anchoredPos, Vector2 sizeDelta, Material material )
+        {
+            Transform existingTransform = parent.Find( name );
+            GameObject graphGO;
+
+            if( existingTransform != null )
+            {
+                graphGO = existingTransform.gameObject;
+            }
+            else
+            {
+                graphGO = new GameObject( name, typeof( RectTransform ), typeof( CanvasRenderer ), typeof( Image ) );
+                graphGO.transform.SetParent( parent, false );
+            }
+
+            RectTransform rect = graphGO.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2( 0f, 0f );
+            rect.anchorMax = new Vector2( 1f, 0f );
+            rect.pivot = new Vector2( 0.5f, 0.5f );
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = sizeDelta;
+
+            Image image = graphGO.GetComponent<Image>();
+            if( material != null )
+            {
+                image.material = material;
+            }
+
+            return image;
         }
 
         [MenuItem( "Tools/Graphy/Add CPU/GPU Graphs to FPS Module" )]
