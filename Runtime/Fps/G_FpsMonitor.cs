@@ -195,21 +195,23 @@ namespace Tayx.Graphy.Fps
         {
             if( m_cpuSamples.Full )
             {
-                float remove = (float)m_cpuSamples.PopFront();
-                m_cpuAverageWindowSum -= remove;
+                short remove = m_cpuSamples.PopFront();
+                m_cpuAverageWindowSum -= remove / 1000f;  // Convert back to seconds before subtracting
             }
-            m_cpuSamples.PushBack( (short)(cpuTime * 1000) );  // Store as int milliseconds
+            short cpuTimeMs = (short)(cpuTime * 1000);  // Store as int milliseconds
+            m_cpuSamples.PushBack( cpuTimeMs );
             m_cpuAverageWindowSum += cpuTime;
         }
-        
+
         private void UpdateGpuStatistics( float gpuTime )
         {
             if( m_gpuSamples.Full )
             {
-                float remove = (float)m_gpuSamples.PopFront();
-                m_gpuAverageWindowSum -= remove;
+                short remove = m_gpuSamples.PopFront();
+                m_gpuAverageWindowSum -= remove / 1000f;  // Convert back to seconds before subtracting
             }
-            m_gpuSamples.PushBack( (short)(gpuTime * 1000) );  // Store as int milliseconds  
+            short gpuTimeMs = (short)(gpuTime * 1000);  // Store as int milliseconds
+            m_gpuSamples.PushBack( gpuTimeMs );
             m_gpuAverageWindowSum += gpuTime;
         }
         
