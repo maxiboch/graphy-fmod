@@ -1,5 +1,12 @@
 # Changelog - Graphy-FMOD Fork
 
+## [v3.1.10] - 2025-11-16
+
+### Fixed - FMOD Value Formatting & FPS Additional Graphs
+- Prevent `OverflowException` in `G_FloatString.ToIndex` when formatting extreme FMOD stats values.
+- Make FPS CPU/GPU additional graphs allocate their float arrays based on `GraphyMode` (FULL vs LIGHT), eliminating remaining `Property (GraphValues) exceeds previous array size` warnings.
+- Handle FMOD builds that don't expose channel metering by disabling metering cleanly instead of spamming `[Graphy] Error updating FMOD stats: FMOD_ChannelGroup_GetMeteringInfo`.
+
 ## [v3.1.9] - 2025-11-16
 
 ### Fixed - FMOD Graph Rendering

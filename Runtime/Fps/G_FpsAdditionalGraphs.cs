@@ -188,11 +188,20 @@ namespace Tayx.Graphy.Fps
                 m_graphShader = Shader.Find("Graphy/Graph Standard");
             }
 
+            // Match the array size used by the FPS graph so we don't hit
+            // "Property (GraphValues) exceeds previous array size" warnings.
+            int arrayMaxSize = G_GraphShader.ArrayMaxSizeFull;
+            if (m_graphyManager != null && m_graphyManager.GraphyMode == GraphyManager.Mode.LIGHT)
+            {
+                arrayMaxSize = G_GraphShader.ArrayMaxSizeLight;
+            }
+
             if (m_cpuGraph != null && m_graphShader != null)
             {
                 m_cpuGraphShader = new G_GraphShader
                 {
-                    Image = m_cpuGraph
+                    Image = m_cpuGraph,
+                    ArrayMaxSize = arrayMaxSize
                 };
                 m_cpuGraphShader.InitializeShader();
             }
@@ -201,7 +210,8 @@ namespace Tayx.Graphy.Fps
             {
                 m_gpuGraphShader = new G_GraphShader
                 {
-                    Image = m_gpuGraph
+                    Image = m_gpuGraph,
+                    ArrayMaxSize = arrayMaxSize
                 };
                 m_gpuGraphShader.InitializeShader();
             }

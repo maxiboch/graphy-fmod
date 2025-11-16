@@ -166,7 +166,22 @@ namespace Tayx.Graphy.Utils.NumString
 
         private static int ToIndex( this float f )
         {
-            return Mathf.Abs( (f * m_decimalMultiplier).ToInt() );
+            // Guard against NaN/Infinity and values that would overflow the int range.
+            // Using Mathf.Abs on int.MinValue throws OverflowException, so we work in float space
+            // and clamp before casting.
+            if( float.IsNaN( f ) || float.IsInfinity( f ) )
+            {
+                return 0;
+            }
+
+            float scaled = Mathf.Abs( f ) * m_decimalMultiplier;
+
+            if( scaled > int.MaxValue )
+            {
+                scaled = int.MaxValue;
+            }
+
+            return (int) scaled;
         }
 
         private static float FromIndex( this int i )

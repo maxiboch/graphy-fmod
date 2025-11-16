@@ -69,7 +69,8 @@ namespace Tayx.Graphy.Fmod
         private G_DoubleEndedQueue m_rightPeakSamples;
         private float m_leftRmsSum = 0f;
         private float m_rightRmsSum = 0f;
-        
+        private bool m_meteringSupported = true;
+
         // FFT Spectrum analysis
         private IntPtr m_fftDsp = IntPtr.Zero;
         private int m_spectrumSize = 512;  // Default spectrum size
@@ -557,50 +558,59 @@ namespace Tayx.Graphy.Fmod
                     PeakFileUsageKBps = Mathf.Max(PeakFileUsageKBps, CurrentFileUsageKBps);
                 }
 
-                // Get audio metering info
-                if (m_masterChannelGroup != IntPtr.Zero)
+                // Get audio metering info (if supported by this FMOD build)
+                if (m_meteringSupported && m_masterChannelGroup != IntPtr.Zero)
                 {
-                    FMOD.ChannelGroup masterGroup = new FMOD.ChannelGroup(m_masterChannelGroup);
-                    result = masterGroup.getMeteringInfo(out m_meteringInfo);
-                    if (result == FMOD.RESULT.OK && m_meteringInfo.numChannels > 0)
+                    try
                     {
-                        // Get RMS and peak levels
-                        int numChannels = Math.Min(m_meteringInfo.numChannels, 32);
-                        
-                        // Copy levels from unmanaged memory
-                        if (m_meteringInfo.rmslevel != IntPtr.Zero)
+                        FMOD.ChannelGroup masterGroup = new FMOD.ChannelGroup(m_masterChannelGroup);
+                        result = masterGroup.getMeteringInfo(out m_meteringInfo);
+                        if (result == FMOD.RESULT.OK && m_meteringInfo.numChannels > 0)
                         {
-                            Marshal.Copy(m_meteringInfo.rmslevel, m_rmsLevels, 0, numChannels);
-                        }
-                        if (m_meteringInfo.peaklevel != IntPtr.Zero)
-                        {
-                            Marshal.Copy(m_meteringInfo.peaklevel, m_peakLevels, 0, numChannels);
-                        }
-                        
-                        // For stereo, track left and right channels
-                        if (numChannels >= 2)
-                        {
-                            CurrentLeftRMS = LinearToDecibels(m_rmsLevels[0]);
-                            CurrentRightRMS = LinearToDecibels(m_rmsLevels[1]);
-                            CurrentLeftPeak = LinearToDecibels(m_peakLevels[0]);
-                            CurrentRightPeak = LinearToDecibels(m_peakLevels[1]);
-                            
-                            // Update averages
-                            float avgLeftRms, avgRightRms;
-                            UpdateStatistic(m_leftRmsSamples, CurrentLeftRMS, ref m_leftRmsSum, out avgLeftRms);
-                            UpdateStatistic(m_rightRmsSamples, CurrentRightRMS, ref m_rightRmsSum, out avgRightRms);
-                            AverageLeftRMS = avgLeftRms;
-                            AverageRightRMS = avgRightRms;
-                        }
-                        else if (numChannels == 1)
-                        {
-                            // Mono - use same value for both channels
-                            CurrentLeftRMS = CurrentRightRMS = LinearToDecibels(m_rmsLevels[0]);
-                            CurrentLeftPeak = CurrentRightPeak = LinearToDecibels(m_peakLevels[0]);
+                            // Get RMS and peak levels
+                            int numChannels = Math.Min(m_meteringInfo.numChannels, 32);
+
+                            // Copy levels from unmanaged memory
+                            if (m_meteringInfo.rmslevel != IntPtr.Zero)
+                            {
+                                Marshal.Copy(m_meteringInfo.rmslevel, m_rmsLevels, 0, numChannels);
+                            }
+                            if (m_meteringInfo.peaklevel != IntPtr.Zero)
+                            {
+                                Marshal.Copy(m_meteringInfo.peaklevel, m_peakLevels, 0, numChannels);
+                            }
+
+                            // For stereo, track left and right channels
+                            if (numChannels >= 2)
+                            {
+                                CurrentLeftRMS = LinearToDecibels(m_rmsLevels[0]);
+                                CurrentRightRMS = LinearToDecibels(m_rmsLevels[1]);
+                                CurrentLeftPeak = LinearToDecibels(m_peakLevels[0]);
+                                CurrentRightPeak = LinearToDecibels(m_peakLevels[1]);
+
+                                // Update averages
+                                float avgLeftRms, avgRightRms;
+                                UpdateStatistic(m_leftRmsSamples, CurrentLeftRMS, ref m_leftRmsSum, out avgLeftRms);
+                                UpdateStatistic(m_rightRmsSamples, CurrentRightRMS, ref m_rightRmsSum, out avgRightRms);
+                                AverageLeftRMS = avgLeftRms;
+                                AverageRightRMS = avgRightRms;
+                            }
+                            else if (numChannels == 1)
+                            {
+                                // Mono - use same value for both channels
+                                CurrentLeftRMS = CurrentRightRMS = LinearToDecibels(m_rmsLevels[0]);
+                                CurrentLeftPeak = CurrentRightPeak = LinearToDecibels(m_peakLevels[0]);
+                            }
                         }
                     }
+                    catch (EntryPointNotFoundException)
+                    {
+                        // Some FMOD builds don't include channel metering; disable it cleanly
+                        m_meteringSupported = false;
+                        Debug.LogWarning("[Graphy] FMOD channel metering API not available in this FMOD build. Disabling level meters.");
+                    }
                 }
-                
+
                 // Update FFT spectrum if enabled
                 UpdateFFTSpectrum();
             }
