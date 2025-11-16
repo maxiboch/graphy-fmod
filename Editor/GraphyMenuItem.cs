@@ -265,8 +265,10 @@ namespace Tayx.Graphy
             }
 
             // Create CPU and GPU graph images
-            var cpuGraphGO = CreateGraphChild( "FPS_CPU_Graph", graphContainer, new Vector2( 0f, 60f ), new Vector2( 0f, 50f ) );
-            var gpuGraphGO = CreateGraphChild( "FPS_GPU_Graph", graphContainer, new Vector2( 0f, 5f ), new Vector2( 0f, 50f ) );
+            // Position them below the main FPS graph (which is typically around 150px tall)
+            // Stack them vertically with some spacing
+            var cpuGraphGO = CreateGraphChild( "FPS_CPU_Graph", graphContainer, new Vector2( 0f, -80f ), new Vector2( 0f, 50f ) );
+            var gpuGraphGO = CreateGraphChild( "FPS_GPU_Graph", graphContainer, new Vector2( 0f, -140f ), new Vector2( 0f, 50f ) );
 
             // Load materials
             Material cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_CPU_Graph.mat" );
