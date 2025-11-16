@@ -206,16 +206,28 @@ namespace Tayx.Graphy
             if( cpuMat == null || gpuMat == null )
             {
                 Debug.LogWarning( "[Graphy] FPS materials not found! Generating..." );
-                GenerateFmodMaterials();
+                GenerateFpsMaterials();
                 cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_CPU_Graph.mat" );
                 gpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_GPU_Graph.mat" );
             }
 
-            // Create or find CPU graph
-            Image cpuImage = SetupGraphImage( graphContainer, "FPS_CPU_Graph", new Vector2( 0, 55 ), new Vector2( 0, 25 ), cpuMat );
+            // Find the main FPS graph and make it full width at the top
+            Transform mainFpsGraph = graphContainer.Find( "Image_Graph" );
+            if( mainFpsGraph != null )
+            {
+                RectTransform mainRect = mainFpsGraph.GetComponent<RectTransform>();
+                mainRect.anchorMin = new Vector2( 0, 0 );
+                mainRect.anchorMax = new Vector2( 1, 0 );
+                mainRect.pivot = new Vector2( 0.5f, 0 );
+                mainRect.anchoredPosition = new Vector2( 0, 60 );  // At the top
+                mainRect.sizeDelta = new Vector2( 0, 30 );  // Full width, 30px tall
+            }
 
-            // Create or find GPU graph
-            Image gpuImage = SetupGraphImage( graphContainer, "FPS_GPU_Graph", new Vector2( 0, 85 ), new Vector2( 0, 25 ), gpuMat );
+            // GPU graph below main FPS (positions are SWAPPED - GPU is y=85, CPU is y=55)
+            Image gpuImage = SetupGraphImage( graphContainer, "FPS_GPU_Graph", new Vector2( 0, 30 ), new Vector2( 0, 25 ), gpuMat );
+
+            // CPU graph at bottom
+            Image cpuImage = SetupGraphImage( graphContainer, "FPS_CPU_Graph", new Vector2( 0, 0 ), new Vector2( 0, 25 ), cpuMat );
 
             // Wire up the G_FpsAdditionalGraphs component
             var additionalGraphs = fpsModule.GetComponent<Tayx.Graphy.Fps.G_FpsAdditionalGraphs>();
@@ -360,11 +372,11 @@ namespace Tayx.Graphy
                 Debug.Log( "[Graphy] Created Graph_Container" );
             }
 
-            // Create graphs stacked vertically - simple clean layout
-            Image cpuImage = SetupGraphImage( graphContainer, "CPU_Graph", new Vector2( 0, 165 ), new Vector2( -10, 70 ), cpuMat );
-            Image memImage = SetupGraphImage( graphContainer, "Memory_Graph", new Vector2( 0, 90 ), new Vector2( -10, 70 ), memMat );
-            Image channelsImage = SetupGraphImage( graphContainer, "Channels_Graph", new Vector2( 0, 15 ), new Vector2( -10, 70 ), channelsMat );
-            Image fileIOImage = SetupGraphImage( graphContainer, "FileIO_Graph", new Vector2( 0, -60 ), new Vector2( -10, 70 ), fileIOMat );
+            // Create graphs stacked vertically - start at 280 from top
+            Image cpuImage = SetupGraphImage( graphContainer, "CPU_Graph", new Vector2( 0, 280 ), new Vector2( -10, 70 ), cpuMat );
+            Image memImage = SetupGraphImage( graphContainer, "Memory_Graph", new Vector2( 0, 205 ), new Vector2( -10, 70 ), memMat );
+            Image channelsImage = SetupGraphImage( graphContainer, "Channels_Graph", new Vector2( 0, 130 ), new Vector2( -10, 70 ), channelsMat );
+            Image fileIOImage = SetupGraphImage( graphContainer, "FileIO_Graph", new Vector2( 0, 55 ), new Vector2( -10, 70 ), fileIOMat );
 
             // Wire up the references in G_FmodGraph
             SerializedObject graphSO = new SerializedObject( fmodGraph );
@@ -381,6 +393,71 @@ namespace Tayx.Graphy
         {
             GameObject fmodModule = fmodManager.gameObject;
 
+            // Load spectrum material
+            Material spectrumMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_Spectrum.mat" );
+            if( spectrumMat == null )
+            {
+                Debug.LogWarning( "[Graphy] Spectrum material not found! Generating..." );
+                GenerateFmodMaterials();
+                spectrumMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_Spectrum.mat" );
+            }
+
+            // Find or create graph container
+            Transform graphContainer = fmodModule.transform.Find( "Graph_Container" );
+            if( graphContainer == null )
+            {
+                graphContainer = fmodModule.transform.Find( "FMOD_Graph" );
+            }
+
+            if( graphContainer != null )
+            {
+                // Create spectrum visualization at the bottom (below FileIO graph)
+                Transform spectrumTransform = graphContainer.Find( "Spectrum_Graph" );
+                if( spectrumTransform == null )
+                {
+                    GameObject spectrumObj = new GameObject( "Spectrum_Graph", typeof( RectTransform ), typeof( CanvasRenderer ), typeof( Image ) );
+                    spectrumObj.transform.SetParent( graphContainer, false );
+
+                    RectTransform spectrumRect = spectrumObj.GetComponent<RectTransform>();
+                    spectrumRect.anchorMin = new Vector2( 0f, 0f );
+                    spectrumRect.anchorMax = new Vector2( 1f, 0f );
+                    spectrumRect.pivot = new Vector2( 0.5f, 0.5f );
+                    spectrumRect.anchoredPosition = new Vector2( 0, -30 );  // Below FileIO
+                    spectrumRect.sizeDelta = new Vector2( -10, 70 );
+
+                    Image spectrumImage = spectrumObj.GetComponent<Image>();
+                    spectrumImage.material = spectrumMat;
+
+                    spectrumTransform = spectrumObj.transform;
+                    Debug.Log( "[Graphy] Created Spectrum_Graph" );
+                }
+
+                // Create audio levels container
+                Transform audioLevelsContainer = graphContainer.Find( "AudioLevels_Container" );
+                if( audioLevelsContainer == null )
+                {
+                    GameObject containerObj = new GameObject( "AudioLevels_Container", typeof( RectTransform ) );
+                    containerObj.transform.SetParent( graphContainer, false );
+
+                    RectTransform containerRect = containerObj.GetComponent<RectTransform>();
+                    containerRect.anchorMin = new Vector2( 0f, 0f );
+                    containerRect.anchorMax = new Vector2( 1f, 0f );
+                    containerRect.pivot = new Vector2( 0.5f, 0.5f );
+                    containerRect.anchoredPosition = new Vector2( 0, -105 );  // Below spectrum
+                    containerRect.sizeDelta = new Vector2( -10, 40 );
+
+                    audioLevelsContainer = containerObj.transform;
+
+                    // Create 4 bars: Left RMS, Right RMS, Left Peak, Right Peak
+                    CreateAudioBar( audioLevelsContainer, "LeftRMS_Bar", new Vector2( 5, 0 ), new Vector2( 75, 35 ), new Color(0.3f, 1f, 0.3f, 0.5f) );
+                    CreateAudioBar( audioLevelsContainer, "RightRMS_Bar", new Vector2( 85, 0 ), new Vector2( 75, 35 ), new Color(0.3f, 1f, 0.3f, 0.5f) );
+                    CreateAudioBar( audioLevelsContainer, "LeftPeak_Bar", new Vector2( 165, 0 ), new Vector2( 75, 35 ), new Color(1f, 1f, 0f, 0.8f) );
+                    CreateAudioBar( audioLevelsContainer, "RightPeak_Bar", new Vector2( 245, 0 ), new Vector2( 75, 35 ), new Color(1f, 1f, 0f, 0.8f) );
+
+                    Debug.Log( "[Graphy] Created AudioLevels_Container with 4 bars" );
+                }
+            }
+
             // Add components using reflection to avoid compile-time dependency
             System.Type spectrumType = System.Type.GetType("Tayx.Graphy.Fmod.G_FmodSpectrum, Tayx.Graphy");
             System.Type audioLevelsType = System.Type.GetType("Tayx.Graphy.Fmod.G_FmodAudioLevels, Tayx.Graphy");
@@ -390,8 +467,22 @@ namespace Tayx.Graphy
                 var spectrum = fmodModule.GetComponent(spectrumType);
                 if( spectrum == null )
                 {
-                    fmodModule.AddComponent(spectrumType);
+                    spectrum = fmodModule.AddComponent(spectrumType);
                     Debug.Log( "[Graphy] Added G_FmodSpectrum component" );
+                }
+
+                // Wire up the spectrum image
+                if( graphContainer != null )
+                {
+                    Transform spectrumTransform = graphContainer.Find( "Spectrum_Graph" );
+                    if( spectrumTransform != null )
+                    {
+                        SerializedObject spectrumSO = new SerializedObject( (UnityEngine.Object)spectrum );
+                        spectrumSO.FindProperty( "m_spectrumImage" ).objectReferenceValue = spectrumTransform.GetComponent<Image>();
+                        spectrumSO.FindProperty( "m_spectrumMaterial" ).objectReferenceValue = spectrumMat;
+                        spectrumSO.ApplyModifiedProperties();
+                        Debug.Log( "[Graphy] Wired up spectrum image" );
+                    }
                 }
             }
 
@@ -400,10 +491,49 @@ namespace Tayx.Graphy
                 var audioLevels = fmodModule.GetComponent(audioLevelsType);
                 if( audioLevels == null )
                 {
-                    fmodModule.AddComponent(audioLevelsType);
+                    audioLevels = fmodModule.AddComponent(audioLevelsType);
                     Debug.Log( "[Graphy] Added G_FmodAudioLevels component" );
                 }
+
+                // Wire up the audio levels bars
+                if( graphContainer != null )
+                {
+                    Transform audioLevelsContainer = graphContainer.Find( "AudioLevels_Container" );
+                    if( audioLevelsContainer != null )
+                    {
+                        SerializedObject audioSO = new SerializedObject( (UnityEngine.Object)audioLevels );
+
+                        Transform leftRms = audioLevelsContainer.Find( "LeftRMS_Bar" );
+                        Transform rightRms = audioLevelsContainer.Find( "RightRMS_Bar" );
+                        Transform leftPeak = audioLevelsContainer.Find( "LeftPeak_Bar" );
+                        Transform rightPeak = audioLevelsContainer.Find( "RightPeak_Bar" );
+
+                        if( leftRms != null ) audioSO.FindProperty( "m_leftRmsBar" ).objectReferenceValue = leftRms.GetComponent<Image>();
+                        if( rightRms != null ) audioSO.FindProperty( "m_rightRmsBar" ).objectReferenceValue = rightRms.GetComponent<Image>();
+                        if( leftPeak != null ) audioSO.FindProperty( "m_leftPeakBar" ).objectReferenceValue = leftPeak.GetComponent<Image>();
+                        if( rightPeak != null ) audioSO.FindProperty( "m_rightPeakBar" ).objectReferenceValue = rightPeak.GetComponent<Image>();
+
+                        audioSO.ApplyModifiedProperties();
+                        Debug.Log( "[Graphy] Wired up audio levels bars" );
+                    }
+                }
             }
+        }
+
+        static void CreateAudioBar( Transform parent, string name, Vector2 anchoredPos, Vector2 sizeDelta, Color color )
+        {
+            GameObject barObj = new GameObject( name, typeof( RectTransform ), typeof( CanvasRenderer ), typeof( Image ) );
+            barObj.transform.SetParent( parent, false );
+
+            RectTransform rect = barObj.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2( 0f, 0f );
+            rect.anchorMax = new Vector2( 0f, 0f );
+            rect.pivot = new Vector2( 0f, 0.5f );
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = sizeDelta;
+
+            Image image = barObj.GetComponent<Image>();
+            image.color = color;
         }
 
         static void FixFmodModuleLayout( Transform fmodModule )
@@ -411,9 +541,9 @@ namespace Tayx.Graphy
             RectTransform rect = fmodModule.GetComponent<RectTransform>();
             if( rect != null )
             {
-                // Make module taller to fit all graphs and move it down to not overlap RAM
-                rect.sizeDelta = new Vector2( 330f, 320f );  // Increased height
-                rect.anchoredPosition = new Vector2( -180f, -360f );  // Moved down more
+                // Make module much taller to fit all graphs including spectrum and audio levels
+                rect.sizeDelta = new Vector2( 330f, 450f );  // Increased height to 450
+                rect.anchoredPosition = new Vector2( -180f, -520f );  // Moved down to -520 to not overlap RAM
 
                 Debug.Log( "[Graphy] Fixed FMOD module size and position" );
             }
