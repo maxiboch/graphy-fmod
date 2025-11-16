@@ -321,10 +321,10 @@ namespace Tayx.Graphy
 
             if( fmodModule == null )
             {
-                var fmodManager = graphyManager.GetComponentInChildren<Tayx.Graphy.Fmod.G_FmodManager>( true );
-                if( fmodManager != null )
+                var fmodManagerInChildren = graphyManager.GetComponentInChildren<Tayx.Graphy.Fmod.G_FmodManager>( true );
+                if( fmodManagerInChildren != null )
                 {
-                    fmodModule = fmodManager.transform;
+                    fmodModule = fmodManagerInChildren.transform;
                 }
             }
 

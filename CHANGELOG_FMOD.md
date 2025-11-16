@@ -1,5 +1,14 @@
 # Changelog - Graphy-FMOD Fork
 
+## [v3.1.8] - 2025-11-16
+
+### Fixed - Editor & Setup Robustness
+- Fix GraphyManagerEditor InvalidCastException by using a safe cast and null-guarded Canvas access.
+- Make FPS module setup robust by falling back to locating G_FpsManager in children when the "FPS - Module" GameObject is renamed or nested.
+- Make FMOD module setup robust by falling back to locating G_FmodManager in children when the "FMOD - Module" GameObject is renamed or nested.
+- Fix a compile error in GraphyMenuItem.SetupFmodModule introduced in v3.1.7.
+
+
 ## [v3.1.6] - 2025-11-16
 
 ### Changed - Layout & FMOD Spectrum Wiring
