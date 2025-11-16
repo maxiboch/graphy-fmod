@@ -110,12 +110,13 @@ namespace Tayx.Graphy.Fmod
             {
                 float cpuValue = m_fmodMonitor.CurrentFmodCpu;
                 m_highestCpuValue = Mathf.Max(m_highestCpuValue, cpuValue);
+                float maxCpu = Mathf.Max(m_highestCpuValue, 1f);
 
                 for (int i = 0; i <= m_resolution - 1; i++)
                 {
                     if (i >= m_resolution - 1)
                     {
-                        m_cpuGraphArray[i] = cpuValue;
+                        m_cpuGraphArray[i] = cpuValue / maxCpu;
                     }
                     else
                     {
@@ -126,10 +127,10 @@ namespace Tayx.Graphy.Fmod
                 m_cpuGraphShader.ShaderArrayValues = m_cpuGraphArray;
                 m_cpuGraphShader.UpdatePoints();
                 m_cpuGraphShader.UpdateArrayValuesLength();
-                m_cpuGraphShader.Average = m_fmodMonitor.AverageFmodCpu;
+                m_cpuGraphShader.Average = m_fmodMonitor.AverageFmodCpu / maxCpu;
                 m_cpuGraphShader.UpdateAverage();
-                m_cpuGraphShader.GoodThreshold = 5f;
-                m_cpuGraphShader.CautionThreshold = 10f;
+                m_cpuGraphShader.GoodThreshold = 5f / maxCpu;
+                m_cpuGraphShader.CautionThreshold = 10f / maxCpu;
                 m_cpuGraphShader.UpdateThresholds();
             }
 
@@ -138,12 +139,13 @@ namespace Tayx.Graphy.Fmod
             {
                 float memoryValue = m_fmodMonitor.CurrentFmodMemoryMB;
                 m_highestMemoryValue = Mathf.Max(m_highestMemoryValue, memoryValue);
+                float maxMemory = Mathf.Max(m_highestMemoryValue, 1f);
 
                 for (int i = 0; i <= m_resolution - 1; i++)
                 {
                     if (i >= m_resolution - 1)
                     {
-                        m_memoryGraphArray[i] = memoryValue;
+                        m_memoryGraphArray[i] = memoryValue / maxMemory;
                     }
                     else
                     {
@@ -154,10 +156,10 @@ namespace Tayx.Graphy.Fmod
                 m_memoryGraphShader.ShaderArrayValues = m_memoryGraphArray;
                 m_memoryGraphShader.UpdatePoints();
                 m_memoryGraphShader.UpdateArrayValuesLength();
-                m_memoryGraphShader.Average = m_fmodMonitor.AverageFmodMemoryMB;
+                m_memoryGraphShader.Average = m_fmodMonitor.AverageFmodMemoryMB / maxMemory;
                 m_memoryGraphShader.UpdateAverage();
-                m_memoryGraphShader.GoodThreshold = 50f;
-                m_memoryGraphShader.CautionThreshold = 100f;
+                m_memoryGraphShader.GoodThreshold = 50f / maxMemory;
+                m_memoryGraphShader.CautionThreshold = 100f / maxMemory;
                 m_memoryGraphShader.UpdateThresholds();
             }
 
@@ -166,12 +168,13 @@ namespace Tayx.Graphy.Fmod
             {
                 float channelsValue = m_fmodMonitor.CurrentChannelsPlaying;
                 m_highestChannelsValue = Mathf.Max(m_highestChannelsValue, channelsValue);
+                float maxChannels = Mathf.Max(m_highestChannelsValue, 1f);
 
                 for (int i = 0; i <= m_resolution - 1; i++)
                 {
                     if (i >= m_resolution - 1)
                     {
-                        m_channelsGraphArray[i] = channelsValue;
+                        m_channelsGraphArray[i] = channelsValue / maxChannels;
                     }
                     else
                     {
@@ -182,10 +185,10 @@ namespace Tayx.Graphy.Fmod
                 m_channelsGraphShader.ShaderArrayValues = m_channelsGraphArray;
                 m_channelsGraphShader.UpdatePoints();
                 m_channelsGraphShader.UpdateArrayValuesLength();
-                m_channelsGraphShader.Average = m_fmodMonitor.AverageChannelsPlaying;
+                m_channelsGraphShader.Average = m_fmodMonitor.AverageChannelsPlaying / maxChannels;
                 m_channelsGraphShader.UpdateAverage();
-                m_channelsGraphShader.GoodThreshold = 32f;
-                m_channelsGraphShader.CautionThreshold = 64f;
+                m_channelsGraphShader.GoodThreshold = 32f / maxChannels;
+                m_channelsGraphShader.CautionThreshold = 64f / maxChannels;
                 m_channelsGraphShader.UpdateThresholds();
             }
 
@@ -194,12 +197,13 @@ namespace Tayx.Graphy.Fmod
             {
                 float fileIOValue = m_fmodMonitor.CurrentFileUsageKBps;
                 m_highestFileIOValue = Mathf.Max(m_highestFileIOValue, fileIOValue);
+                float maxFileIO = Mathf.Max(m_highestFileIOValue, 1f);
 
                 for (int i = 0; i <= m_resolution - 1; i++)
                 {
                     if (i >= m_resolution - 1)
                     {
-                        m_fileIOGraphArray[i] = fileIOValue;
+                        m_fileIOGraphArray[i] = fileIOValue / maxFileIO;
                     }
                     else
                     {
@@ -210,10 +214,10 @@ namespace Tayx.Graphy.Fmod
                 m_fileIOGraphShader.ShaderArrayValues = m_fileIOGraphArray;
                 m_fileIOGraphShader.UpdatePoints();
                 m_fileIOGraphShader.UpdateArrayValuesLength();
-                m_fileIOGraphShader.Average = m_fmodMonitor.AverageFileUsageKBps;
+                m_fileIOGraphShader.Average = m_fmodMonitor.AverageFileUsageKBps / maxFileIO;
                 m_fileIOGraphShader.UpdateAverage();
-                m_fileIOGraphShader.GoodThreshold = 1000f;  // Good < 1000 KB/s
-                m_fileIOGraphShader.CautionThreshold = 3000f;  // Caution 1000-3000 KB/s, Critical > 3000 KB/s
+                m_fileIOGraphShader.GoodThreshold = 1000f / maxFileIO;  // Good < 1000 KB/s
+                m_fileIOGraphShader.CautionThreshold = 3000f / maxFileIO;  // Caution 1000-3000 KB/s, Critical > 3000 KB/s
                 m_fileIOGraphShader.UpdateThresholds();
             }
         }
@@ -278,6 +282,15 @@ namespace Tayx.Graphy.Fmod
 
             if (m_isInitialized) return;
 
+            // Decide a safe max array size for the shader once, before the first InitializeShader call.
+            // This must be the largest size we'll ever need for this material, otherwise Unity will
+            // clamp future SetFloatArray calls (150 vs 128 warnings).
+            int arrayMaxSize = G_GraphShader.ArrayMaxSizeFull;
+            if (m_graphyManager != null && m_graphyManager.GraphyMode == GraphyManager.Mode.LIGHT)
+            {
+                arrayMaxSize = G_GraphShader.ArrayMaxSizeLight;
+            }
+
             if (m_graphShader == null)
             {
                 m_graphShader = Shader.Find("Graphy/Graph Standard");
@@ -287,7 +300,8 @@ namespace Tayx.Graphy.Fmod
             {
                 m_cpuGraphShader = new G_GraphShader
                 {
-                    Image = m_cpuGraph
+                    Image = m_cpuGraph,
+                    ArrayMaxSize = arrayMaxSize
                 };
 
                 m_cpuGraphShader.InitializeShader();
@@ -297,7 +311,8 @@ namespace Tayx.Graphy.Fmod
             {
                 m_memoryGraphShader = new G_GraphShader
                 {
-                    Image = m_memoryGraph
+                    Image = m_memoryGraph,
+                    ArrayMaxSize = arrayMaxSize
                 };
 
                 m_memoryGraphShader.InitializeShader();
@@ -307,7 +322,8 @@ namespace Tayx.Graphy.Fmod
             {
                 m_channelsGraphShader = new G_GraphShader
                 {
-                    Image = m_channelsGraph
+                    Image = m_channelsGraph,
+                    ArrayMaxSize = arrayMaxSize
                 };
 
                 m_channelsGraphShader.InitializeShader();
@@ -317,7 +333,8 @@ namespace Tayx.Graphy.Fmod
             {
                 m_fileIOGraphShader = new G_GraphShader
                 {
-                    Image = m_fileIOGraph
+                    Image = m_fileIOGraph,
+                    ArrayMaxSize = arrayMaxSize
                 };
 
                 m_fileIOGraphShader.InitializeShader();

@@ -1,5 +1,12 @@
 # Changelog - Graphy-FMOD Fork
 
+## [v3.1.9] - 2025-11-16
+
+### Fixed - FMOD Graph Rendering
+- Fix FMOD graph materials to allocate a large enough float array upfront based on GraphyMode (FULL vs LIGHT), eliminating `Property (GraphValues) exceeds previous array size` warnings.
+- Normalize FMOD CPU, Memory, Channels, and File I/O graph values based on recent peaks so the graphs stay within 0–1 range and remain readable across different projects.
+
+
 ## [v3.1.8] - 2025-11-16
 
 ### Fixed - Editor & Setup Robustness
