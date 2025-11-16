@@ -535,7 +535,15 @@ namespace Tayx.Graphy.Fmod
                     PeakFileUsageKBps = Mathf.Max(PeakFileUsageKBps, CurrentFileUsageKBps);
 
                     // Reset the file usage counters after reading
-                    system.resetFileUsage();
+                    // Note: This might not be available in all FMOD versions
+                    try
+                    {
+                        system.resetFileUsage();
+                    }
+                    catch
+                    {
+                        // Ignore if resetFileUsage is not available
+                    }
                 }
 
                 // Get audio metering info
@@ -587,8 +595,14 @@ namespace Tayx.Graphy.Fmod
             }
             catch (Exception e)
             {
+                // Log the error but don't reset initialization unless it's a critical error
                 Debug.LogWarning($"[Graphy] Error updating FMOD stats: {e.Message}");
-                m_isInitialized = false;
+
+                // Only reset initialization if the FMOD system handle is invalid
+                if (m_fmodSystem == IntPtr.Zero)
+                {
+                    m_isInitialized = false;
+                }
             }
         }
 
