@@ -110,6 +110,78 @@ namespace Tayx.Graphy
             Debug.Log( "[Graphy] Generated FMOD and FPS graph materials!" );
         }
 
+        [MenuItem( "Tools/Graphy/Setup FMOD Module with Materials" )]
+        static void SetupFmodModuleWithMaterials()
+        {
+            // First generate materials
+            GenerateFmodMaterials();
+
+            // Find the FMOD module in the scene
+            var fmodManager = Object.FindObjectOfType<G_FmodManager>();
+            if( fmodManager == null )
+            {
+                Debug.LogError( "[Graphy] No FMOD module found in scene! Please add Graphy prefab first." );
+                return;
+            }
+
+            // Load materials
+            Material cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_CPU_Graph.mat" );
+            Material memMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_Memory_Graph.mat" );
+            Material channelsMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_Channels_Graph.mat" );
+            Material fileIOMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FMOD_FileIO_Graph.mat" );
+
+            // Get the graph component
+            var fmodGraph = fmodManager.GetComponent<G_FmodGraph>();
+            if( fmodGraph == null )
+            {
+                Debug.LogError( "[Graphy] FMOD module has no G_FmodGraph component!" );
+                return;
+            }
+
+            // Apply materials using SerializedObject
+            SerializedObject graphSO = new SerializedObject( fmodGraph );
+
+            var cpuGraphProp = graphSO.FindProperty( "m_cpuGraph" );
+            var memGraphProp = graphSO.FindProperty( "m_memoryGraph" );
+            var channelsGraphProp = graphSO.FindProperty( "m_channelsGraph" );
+            var fileIOGraphProp = graphSO.FindProperty( "m_fileIOGraph" );
+
+            if( cpuGraphProp.objectReferenceValue != null && cpuMat != null )
+            {
+                Image cpuImage = cpuGraphProp.objectReferenceValue as Image;
+                cpuImage.material = cpuMat;
+                Debug.Log( "[Graphy] Applied CPU material" );
+            }
+
+            if( memGraphProp.objectReferenceValue != null && memMat != null )
+            {
+                Image memImage = memGraphProp.objectReferenceValue as Image;
+                memImage.material = memMat;
+                Debug.Log( "[Graphy] Applied Memory material" );
+            }
+
+            if( channelsGraphProp.objectReferenceValue != null && channelsMat != null )
+            {
+                Image channelsImage = channelsGraphProp.objectReferenceValue as Image;
+                channelsImage.material = channelsMat;
+                Debug.Log( "[Graphy] Applied Channels material" );
+            }
+
+            if( fileIOGraphProp.objectReferenceValue != null && fileIOMat != null )
+            {
+                Image fileIOImage = fileIOGraphProp.objectReferenceValue as Image;
+                fileIOImage.material = fileIOMat;
+                Debug.Log( "[Graphy] Applied File I/O material" );
+            }
+
+            graphSO.ApplyModifiedProperties();
+
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene() );
+
+            Debug.Log( "[Graphy] FMOD module setup complete with materials!" );
+        }
+
         static void CreateMaterialIfMissing( string path, Shader shader, Color color )
         {
             var existing = AssetDatabase.LoadAssetAtPath<Material>( path );
