@@ -253,12 +253,28 @@ namespace Tayx.Graphy.Fmod
                 
                 // Try multiple approaches to get FMOD system
                 // Approach 1: Try custom Player class (for custom FMOD implementations)
-                // Try both possible namespaces
-                var playerType = System.Type.GetType("BabySteps.Core.Audio.Player") ?? System.Type.GetType("Maxi.Audio.Player");
+                // Search through all loaded assemblies for the Player type
+                System.Type playerType = null;
+                foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    playerType = assembly.GetType("BabySteps.Core.Audio.Player");
+                    if (playerType != null) break;
+                    playerType = assembly.GetType("Maxi.Audio.Player");
+                    if (playerType != null) break;
+                }
+
                 if (playerType != null)
                 {
-                    Debug.Log("[Graphy] Found Maxi.Audio.Player type");
-                    var servicesType = System.Type.GetType("Maxi.Audio.Services");
+                    Debug.Log($"[Graphy] Found Player type: {playerType.FullName}");
+
+                    // Search for Services type in all assemblies
+                    System.Type servicesType = null;
+                    foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+                    {
+                        servicesType = assembly.GetType("Maxi.Audio.Services");
+                        if (servicesType != null) break;
+                    }
+
                     if (servicesType != null)
                     {
                         Debug.Log("[Graphy] Found Maxi.Audio.Services type");
