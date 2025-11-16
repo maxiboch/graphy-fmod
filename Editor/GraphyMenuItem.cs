@@ -407,6 +407,8 @@ namespace Tayx.Graphy
             var fmodGraph = root.AddComponent<G_FmodGraph>();
             var fmodText = root.AddComponent<G_FmodText>();
             var fmodMonitor = root.AddComponent<G_FmodMonitor>();
+            var fmodSpectrum = root.AddComponent<G_FmodSpectrum>();
+            var fmodAudioLevels = root.AddComponent<G_FmodAudioLevels>();
 
             // Background images (FULL, TEXT, BASIC)
             var fullBg = CreateImageChild( "BG_Image_FULL", root.transform, new Color( 0f, 0f, 0f, 0.33f ) );
@@ -473,11 +475,29 @@ namespace Tayx.Graphy
             Text fileAvg     = CreateTextChild( "FMOD_FileUsage_Avg", textContainer.transform, font, new Vector2( 160f, -rowHeight * 3f ), "Avg: N/A" );
             Text filePeak    = CreateTextChild( "FMOD_FileUsage_Peak", textContainer.transform, font, new Vector2( 310f, -rowHeight * 3f ), "Peak: N/A" );
 
-            // Audio Level Meters (optional - can be added later)
-            // TODO: Add audio level meter UI elements here
+            // Spectrum Visualization - positioned below the graphs
+            var spectrumContainer = new GameObject( "Spectrum_Container", typeof( RectTransform ) );
+            spectrumContainer.transform.SetParent( root.transform, false );
+            var spectrumRect = spectrumContainer.GetComponent<RectTransform>();
+            spectrumRect.anchorMin = new Vector2( 0f, 0f );
+            spectrumRect.anchorMax = new Vector2( 1f, 0f );
+            spectrumRect.pivot = new Vector2( 0.5f, 0f );
+            spectrumRect.anchoredPosition = new Vector2( 0f, -80f );
+            spectrumRect.sizeDelta = new Vector2( -20f, 60f );
 
-            // Spectrum Visualization (optional - can be added later)
-            // TODO: Add spectrum visualization UI elements here
+            var spectrumImage = spectrumContainer.AddComponent<Image>();
+            spectrumImage.color = Color.white;
+            spectrumImage.raycastTarget = false;
+
+            // Audio Level Meters - positioned to the right of the graphs
+            var audioLevelsContainer = new GameObject( "AudioLevels_Container", typeof( RectTransform ) );
+            audioLevelsContainer.transform.SetParent( root.transform, false );
+            var audioLevelsRect = audioLevelsContainer.GetComponent<RectTransform>();
+            audioLevelsRect.anchorMin = new Vector2( 1f, 0f );
+            audioLevelsRect.anchorMax = new Vector2( 1f, 1f );
+            audioLevelsRect.pivot = new Vector2( 1f, 0.5f );
+            audioLevelsRect.anchoredPosition = new Vector2( -10f, 0f );
+            audioLevelsRect.sizeDelta = new Vector2( 40f, -20f );
 
             var managerSO = new SerializedObject( fmodManager );
             managerSO.FindProperty( "m_fmodGraphGameObject" ).objectReferenceValue = graphContainer;
@@ -521,6 +541,15 @@ namespace Tayx.Graphy
             textSO.FindProperty( "m_channelsPeakText" ).objectReferenceValue = chPeak;
             textSO.FindProperty( "m_fileUsagePeakText" ).objectReferenceValue = filePeak;
             textSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // Wire up spectrum component
+            var spectrumSO = new SerializedObject( fmodSpectrum );
+            spectrumSO.FindProperty( "m_spectrumImage" ).objectReferenceValue = spectrumImage;
+            spectrumSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // Wire up audio levels component (bars will be created as children)
+            // Note: Audio level bars are not created here - they need to be added manually or via another function
+            // The component will work without them, just won't display anything
         }
 
         static void EnsureFolder( string path )
