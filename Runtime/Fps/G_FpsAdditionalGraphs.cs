@@ -87,7 +87,7 @@ namespace Tayx.Graphy.Fps
             // Update CPU graph
             if (m_cpuGraphShader != null)
             {
-                float cpuTime = m_fpsMonitor.CurrentCpuMs;
+                float cpuTime = m_fpsMonitor.CurrentCPU;
                 m_highestCpuValue = Mathf.Max(m_highestCpuValue, cpuTime);
 
                 for (int i = 0; i <= m_resolution - 1; i++)
@@ -105,7 +105,7 @@ namespace Tayx.Graphy.Fps
                 m_cpuGraphShader.ShaderArrayValues = m_cpuGraphArray;
                 m_cpuGraphShader.UpdatePoints();
                 m_cpuGraphShader.UpdateArrayValuesLength();
-                m_cpuGraphShader.Average = m_fpsMonitor.AverageCpuMs;
+                m_cpuGraphShader.Average = m_fpsMonitor.AverageCPU;
                 m_cpuGraphShader.UpdateAverage();
                 m_cpuGraphShader.GoodThreshold = 16.6f;  // 60 FPS
                 m_cpuGraphShader.CautionThreshold = 33.3f;  // 30 FPS
@@ -115,7 +115,7 @@ namespace Tayx.Graphy.Fps
             // Update GPU graph
             if (m_gpuGraphShader != null)
             {
-                float gpuTime = m_fpsMonitor.CurrentGpuMs;
+                float gpuTime = m_fpsMonitor.CurrentGPU;
                 m_highestGpuValue = Mathf.Max(m_highestGpuValue, gpuTime);
 
                 for (int i = 0; i <= m_resolution - 1; i++)
@@ -133,7 +133,7 @@ namespace Tayx.Graphy.Fps
                 m_gpuGraphShader.ShaderArrayValues = m_gpuGraphArray;
                 m_gpuGraphShader.UpdatePoints();
                 m_gpuGraphShader.UpdateArrayValuesLength();
-                m_gpuGraphShader.Average = m_fpsMonitor.AverageGpuMs;
+                m_gpuGraphShader.Average = m_fpsMonitor.AverageGPU;
                 m_gpuGraphShader.UpdateAverage();
                 m_gpuGraphShader.GoodThreshold = 16.6f;  // 60 FPS
                 m_gpuGraphShader.CautionThreshold = 33.3f;  // 30 FPS
