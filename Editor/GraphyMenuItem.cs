@@ -282,28 +282,36 @@ namespace Tayx.Graphy
 
             GameObject fmodModule = fmodManager.gameObject;
 
-            // Check if components already exist
-            var spectrum = fmodModule.GetComponent<G_FmodSpectrum>();
-            var audioLevels = fmodModule.GetComponent<G_FmodAudioLevels>();
+            // Check if components already exist (use typeof to avoid compile-time dependency)
+            System.Type spectrumType = System.Type.GetType("Tayx.Graphy.Fmod.G_FmodSpectrum, Tayx.Graphy");
+            System.Type audioLevelsType = System.Type.GetType("Tayx.Graphy.Fmod.G_FmodAudioLevels, Tayx.Graphy");
 
-            if( spectrum == null )
+            if( spectrumType != null )
             {
-                spectrum = fmodModule.AddComponent<G_FmodSpectrum>();
-                Debug.Log( "[Graphy] Added G_FmodSpectrum component" );
-            }
-            else
-            {
-                Debug.LogWarning( "[Graphy] G_FmodSpectrum component already exists" );
+                var spectrum = fmodModule.GetComponent(spectrumType);
+                if( spectrum == null )
+                {
+                    fmodModule.AddComponent(spectrumType);
+                    Debug.Log( "[Graphy] Added G_FmodSpectrum component" );
+                }
+                else
+                {
+                    Debug.LogWarning( "[Graphy] G_FmodSpectrum component already exists" );
+                }
             }
 
-            if( audioLevels == null )
+            if( audioLevelsType != null )
             {
-                audioLevels = fmodModule.AddComponent<G_FmodAudioLevels>();
-                Debug.Log( "[Graphy] Added G_FmodAudioLevels component" );
-            }
-            else
-            {
-                Debug.LogWarning( "[Graphy] G_FmodAudioLevels component already exists" );
+                var audioLevels = fmodModule.GetComponent(audioLevelsType);
+                if( audioLevels == null )
+                {
+                    fmodModule.AddComponent(audioLevelsType);
+                    Debug.Log( "[Graphy] Added G_FmodAudioLevels component" );
+                }
+                else
+                {
+                    Debug.LogWarning( "[Graphy] G_FmodAudioLevels component already exists" );
+                }
             }
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
@@ -452,8 +460,12 @@ namespace Tayx.Graphy
             var fmodGraph = root.AddComponent<G_FmodGraph>();
             var fmodText = root.AddComponent<G_FmodText>();
             var fmodMonitor = root.AddComponent<G_FmodMonitor>();
-            var fmodSpectrum = root.AddComponent<G_FmodSpectrum>();
-            var fmodAudioLevels = root.AddComponent<G_FmodAudioLevels>();
+
+            // Add spectrum and audio levels using reflection to avoid compile-time dependency
+            System.Type spectrumType = System.Type.GetType("Tayx.Graphy.Fmod.G_FmodSpectrum, Tayx.Graphy");
+            System.Type audioLevelsType = System.Type.GetType("Tayx.Graphy.Fmod.G_FmodAudioLevels, Tayx.Graphy");
+            Component fmodSpectrum = spectrumType != null ? root.AddComponent(spectrumType) : null;
+            Component fmodAudioLevels = audioLevelsType != null ? root.AddComponent(audioLevelsType) : null;
 
             // Background images (FULL, TEXT, BASIC)
             var fullBg = CreateImageChild( "BG_Image_FULL", root.transform, new Color( 0f, 0f, 0f, 0.33f ) );
