@@ -313,26 +313,50 @@ namespace Tayx.Graphy.Fmod
                                     if (fmodSystemObj != null)
                                     {
                                         Debug.Log("[Graphy] Player.System object exists");
-                                        dynamic fmodSystem = fmodSystemObj;
-                                        if (fmodSystem.hasHandle())
+
+                                        // Use reflection to check if System has a valid handle
+                                        var fmodSystemType = fmodSystemObj.GetType();
+                                        var hasHandleMethod = fmodSystemType.GetMethod("hasHandle");
+                                        if (hasHandleMethod != null && (bool)hasHandleMethod.Invoke(fmodSystemObj, null))
                                         {
                                             Debug.Log("[Graphy] FMOD System has valid handle");
-                                            m_fmodSystem = fmodSystem.handle;
 
-                                            // Get master channel group for audio metering
-                                            dynamic masterGroup;
-                                            var result = fmodSystem.getMasterChannelGroup(out masterGroup);
-                                            Debug.Log($"[Graphy] getMasterChannelGroup result: {result}");
-                                            if (result.ToString() == "OK")
+                                            // Get the handle field/property
+                                            var handleField = fmodSystemType.GetField("handle");
+                                            if (handleField != null)
                                             {
-                                                m_masterChannelGroup = masterGroup.handle;
-                                                Debug.Log($"[Graphy] Master channel group handle: {m_masterChannelGroup}");
+                                                m_fmodSystem = (IntPtr)handleField.GetValue(fmodSystemObj);
+                                            }
 
-                                                // Enable metering on the master channel group
-                                                if (m_masterChannelGroup != IntPtr.Zero)
+                                            // Get master channel group using reflection
+                                            var getMasterChannelGroupMethod = fmodSystemType.GetMethod("getMasterChannelGroup");
+                                            if (getMasterChannelGroupMethod != null)
+                                            {
+                                                object[] parameters = new object[1];
+                                                var result = getMasterChannelGroupMethod.Invoke(fmodSystemObj, parameters);
+                                                Debug.Log($"[Graphy] getMasterChannelGroup result: {result}");
+
+                                                if (result.ToString() == "OK" && parameters[0] != null)
                                                 {
-                                                    masterGroup.setMeteringEnabled(true, true);
-                                                    Debug.Log("[Graphy] Metering enabled on master channel group");
+                                                    var masterGroupObj = parameters[0];
+                                                    var channelGroupType = masterGroupObj.GetType();
+                                                    var channelGroupHandleField = channelGroupType.GetField("handle");
+                                                    if (channelGroupHandleField != null)
+                                                    {
+                                                        m_masterChannelGroup = (IntPtr)channelGroupHandleField.GetValue(masterGroupObj);
+                                                        Debug.Log($"[Graphy] Master channel group handle: {m_masterChannelGroup}");
+
+                                                        // Enable metering on the master channel group
+                                                        if (m_masterChannelGroup != IntPtr.Zero)
+                                                        {
+                                                            var setMeteringMethod = channelGroupType.GetMethod("setMeteringEnabled");
+                                                            if (setMeteringMethod != null)
+                                                            {
+                                                                setMeteringMethod.Invoke(masterGroupObj, new object[] { true, true });
+                                                                Debug.Log("[Graphy] Metering enabled on master channel group");
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             }
 
