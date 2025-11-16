@@ -167,11 +167,21 @@ namespace Tayx.Graphy
 
         static void SetupFpsModule( GraphyManager graphyManager )
         {
-            // Find FPS module
+            // Find FPS module. Prefer name match, but fall back to a child that has G_FpsManager.
             Transform fpsModule = graphyManager.transform.Find( "FPS - Module" );
+
             if( fpsModule == null )
             {
-                Debug.LogWarning( "[Graphy] FPS module not found!" );
+                var fpsManager = graphyManager.GetComponentInChildren<Tayx.Graphy.Fps.G_FpsManager>( true );
+                if( fpsManager != null )
+                {
+                    fpsModule = fpsManager.transform;
+                }
+            }
+
+            if( fpsModule == null )
+            {
+                Debug.LogWarning( "[Graphy] FPS module not found! Tried name 'FPS - Module' and searching for G_FpsManager in children." );
                 return;
             }
 
@@ -306,11 +316,21 @@ namespace Tayx.Graphy
 
         static void SetupFmodModule( GraphyManager graphyManager )
         {
-            // Find FMOD module
+            // Find FMOD module. Prefer name match, but fall back to a child that has G_FmodManager.
             Transform fmodModule = graphyManager.transform.Find( "FMOD - Module" );
+
             if( fmodModule == null )
             {
-                Debug.LogWarning( "[Graphy] FMOD module not found!" );
+                var fmodManager = graphyManager.GetComponentInChildren<Tayx.Graphy.Fmod.G_FmodManager>( true );
+                if( fmodManager != null )
+                {
+                    fmodModule = fmodManager.transform;
+                }
+            }
+
+            if( fmodModule == null )
+            {
+                Debug.LogWarning( "[Graphy] FMOD module not found! Tried name 'FMOD - Module' and searching for G_FmodManager in children." );
                 return;
             }
 

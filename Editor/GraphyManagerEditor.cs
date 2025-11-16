@@ -176,7 +176,8 @@ namespace Tayx.Graphy
 
         private void OnEnable()
         {
-            m_target = (GraphyManager) target;
+            // Use a safe cast in case another GraphyManager type exists in the project
+            m_target = target as GraphyManager;
 
             SerializedObject serObj = serializedObject;
 
@@ -381,10 +382,16 @@ namespace Tayx.Graphy
                 value: m_enableOnStartup.boolValue
             );
 
-            // This is a neat trick to hide Graphy in the Scene if it's going to be deactivated in play mode so that it doesn't use screen space.
-            if( !Application.isPlaying )
+            // This is a neat trick to hide Graphy in the Scene if it's going to be deactivated in play mode
+            // so that it doesn't use screen space. Guard against a null m_target in case the custom editor
+            // is bound to a different GraphyManager type from another assembly.
+            if( !Application.isPlaying && m_target != null )
             {
-                m_target.GetComponent<Canvas>().enabled = m_enableOnStartup.boolValue;
+                var canvas = m_target.GetComponent<Canvas>();
+                if( canvas != null )
+                {
+                    canvas.enabled = m_enableOnStartup.boolValue;
+                }
             }
 
             m_keepAlive.boolValue = EditorGUILayout.Toggle
