@@ -224,6 +224,49 @@ namespace Tayx.Graphy
             return image;
         }
 
+        [MenuItem( "Tools/Graphy/Add Spectrum and Audio Levels to FMOD Module" )]
+        static void AddSpectrumAndAudioLevelsToFmodModule()
+        {
+            // Find the FMOD module in the scene
+            var fmodManager = Object.FindObjectOfType<G_FmodManager>();
+            if( fmodManager == null )
+            {
+                Debug.LogError( "[Graphy] No FMOD module found in scene! Please add Graphy prefab first." );
+                return;
+            }
+
+            GameObject fmodModule = fmodManager.gameObject;
+
+            // Check if components already exist
+            var spectrum = fmodModule.GetComponent<G_FmodSpectrum>();
+            var audioLevels = fmodModule.GetComponent<G_FmodAudioLevels>();
+
+            if( spectrum == null )
+            {
+                spectrum = fmodModule.AddComponent<G_FmodSpectrum>();
+                Debug.Log( "[Graphy] Added G_FmodSpectrum component" );
+            }
+            else
+            {
+                Debug.LogWarning( "[Graphy] G_FmodSpectrum component already exists" );
+            }
+
+            if( audioLevels == null )
+            {
+                audioLevels = fmodModule.AddComponent<G_FmodAudioLevels>();
+                Debug.Log( "[Graphy] Added G_FmodAudioLevels component" );
+            }
+            else
+            {
+                Debug.LogWarning( "[Graphy] G_FmodAudioLevels component already exists" );
+            }
+
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene() );
+
+            Debug.Log( "[Graphy] Spectrum and Audio Levels components added to FMOD module!" );
+        }
+
         [MenuItem( "Tools/Graphy/Add CPU/GPU Graphs to FPS Module" )]
         static void AddAdditionalGraphsToFpsModule()
         {
@@ -265,10 +308,10 @@ namespace Tayx.Graphy
             }
 
             // Create CPU and GPU graph images
-            // Position them below the main FPS graph (which is typically around 150px tall)
-            // Stack them vertically with some spacing
-            var cpuGraphGO = CreateGraphChild( "FPS_CPU_Graph", graphContainer, new Vector2( 0f, -80f ), new Vector2( 0f, 50f ) );
-            var gpuGraphGO = CreateGraphChild( "FPS_GPU_Graph", graphContainer, new Vector2( 0f, -140f ), new Vector2( 0f, 50f ) );
+            // Position them to the RIGHT of the main FPS graph, stacked vertically
+            // These use different anchoring - anchored to the right side
+            var cpuGraphGO = CreateGraphChildRightSide( "FPS_CPU_Graph", graphContainer, new Vector2( -5f, 30f ), new Vector2( 80f, 40f ) );
+            var gpuGraphGO = CreateGraphChildRightSide( "FPS_GPU_Graph", graphContainer, new Vector2( -5f, -15f ), new Vector2( 80f, 40f ) );
 
             // Load materials
             Material cpuMat = AssetDatabase.LoadAssetAtPath<Material>( "Assets/graphy-fmod/Materials/FPS_CPU_Graph.mat" );
@@ -530,6 +573,26 @@ namespace Tayx.Graphy
             rt.anchorMin = new Vector2( 0f, 0f );
             rt.anchorMax = new Vector2( 1f, 0f );
             rt.pivot = new Vector2( 0.5f, 0.5f );
+            rt.anchoredPosition = anchoredPosition;
+            rt.sizeDelta = sizeDelta;
+
+            var img = go.GetComponent<Image>();
+            img.color = Color.white;
+            img.raycastTarget = false;
+
+            return go;
+        }
+
+        static GameObject CreateGraphChildRightSide( string name, Transform parent, Vector2 anchoredPosition, Vector2 sizeDelta )
+        {
+            var go = new GameObject( name, typeof( RectTransform ), typeof( CanvasRenderer ), typeof( Image ) );
+            go.transform.SetParent( parent, false );
+
+            var rt = go.GetComponent<RectTransform>();
+            // Anchor to the right side, centered vertically
+            rt.anchorMin = new Vector2( 1f, 0.5f );
+            rt.anchorMax = new Vector2( 1f, 0.5f );
+            rt.pivot = new Vector2( 1f, 0.5f );
             rt.anchoredPosition = anchoredPosition;
             rt.sizeDelta = sizeDelta;
 
