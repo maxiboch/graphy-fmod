@@ -1,0 +1,72 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 3.1.13)'
+        required: true
+        type: string
+      message:
+        description: 'Release message/title'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes (optional, markdown supported)'
+        required: false
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Configure Git
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+    
+    - name: Update package.json version
+      run: |
+        VERSION="${{ github.event.inputs.version }}"
+        jq --arg version "$VERSION" '.version = $version' package.json > package.tmp.json
+        mv package.tmp.json package.json
+        git add package.json
+        git diff --cached --quiet || git commit -m "Bump version to $VERSION"
+    
+    - name: Push changes
+      run: git push origin main
+    
+    - name: Create and push tag
+      run: |
+        VERSION="${{ github.event.inputs.version }}"
+        MESSAGE="${{ github.event.inputs.message }}"
+        git tag -a "v$VERSION" -m "v$VERSION: $MESSAGE"
+        git push origin "v$VERSION"
+    
+    - name: Update latest tag
+      run: |
+        VERSION="${{ github.event.inputs.version }}"
+        git tag -f latest "v$VERSION"
+        git push origin latest --force
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.event.inputs.version }}
+        release_name: "v${{ github.event.inputs.version }}: ${{ github.event.inputs.message }}"
+        body: |
+          ${{ github.event.inputs.release_notes || format('## Release v{0}\n\n{1}', github.event.inputs.version, github.event.inputs.message) }}
+        draft: false
+        prerelease: false
