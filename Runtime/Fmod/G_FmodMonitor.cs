@@ -770,11 +770,11 @@ namespace Tayx.Graphy.Fmod
             try
             {
                 FMOD.DSP fftDsp = new FMOD.DSP(m_fftDsp);
-                
+
                 // Get FFT spectrum data
                 IntPtr unmanagedData;
-                int length;
-                FMOD.RESULT result = fftDsp.getParameterData((int)FMOD.DSP_FFT.SPECTRUMDATA, out unmanagedData, out length);
+                uint length;
+                FMOD.RESULT result = fftDsp.getParameterData((int)FMOD.DSP_FFT.SPECTRUMDATA, out unmanagedData, out length, IntPtr.Zero, 0);
                 
                 if (result == FMOD.RESULT.OK && unmanagedData != IntPtr.Zero)
                 {
@@ -992,11 +992,11 @@ namespace Tayx.Graphy.Fmod
             }
             
             [DllImport("fmod")]
-            private static extern RESULT FMOD_DSP_GetParameterData(IntPtr dsp, int index, out IntPtr data, out int length);
-            
-            public RESULT getParameterData(int index, out IntPtr data, out int length)
+            private static extern RESULT FMOD_DSP_GetParameterData(IntPtr dsp, int index, out IntPtr data, out uint length, IntPtr valuestr, int valuestrlen);
+
+            public RESULT getParameterData(int index, out IntPtr data, out uint length, IntPtr valuestr, int valuestrlen)
             {
-                return FMOD_DSP_GetParameterData(handle, index, out data, out length);
+                return FMOD_DSP_GetParameterData(handle, index, out data, out length, valuestr, valuestrlen);
             }
             
             [DllImport("fmod")]
