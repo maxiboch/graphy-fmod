@@ -655,6 +655,34 @@ namespace Tayx.Graphy.Fmod
         {
             return value > 0 && (value & (value - 1)) == 0;
         }
+
+        private int SanitizeSpectrumSize(int requestedSize)
+        {
+            // FMOD requires power-of-two window size between 128 and 8192 inclusive
+            const int MinSize = 128;
+            const int MaxSize = 8192;
+
+            if (requestedSize < MinSize) requestedSize = MinSize;
+            if (requestedSize > MaxSize) requestedSize = MaxSize;
+
+            if (IsPowerOfTwo(requestedSize)) return requestedSize;
+
+            // Round to nearest power of two within bounds
+            int power = 1;
+            while (power < requestedSize && power < MaxSize)
+            {
+                power <<= 1;
+            }
+
+            // Decide whether to use this power or previous (closer)
+            int lower = power >> 1;
+            if (lower >= MinSize && requestedSize - lower < power - requestedSize)
+            {
+                return lower;
+            }
+
+            return power;
+        }
         
         private void SetupFFT()
         {
@@ -663,7 +691,9 @@ namespace Tayx.Graphy.Fmod
             try
             {
                 CleanupFFT();
-                
+
+                m_spectrumSize = SanitizeSpectrumSize(m_spectrumSize);
+
                 FMOD.System system = new FMOD.System(m_fmodSystem);
                 
                 // Create FFT DSP
@@ -676,17 +706,16 @@ namespace Tayx.Graphy.Fmod
                     result = fftDsp.setParameterInt((int)FMOD.DSP_FFT.WINDOWSIZE, m_spectrumSize);
                     if (result != FMOD.RESULT.OK)
                     {
-                        Debug.LogWarning($"[Graphy] Failed to set FFT window size: {result}");
+                        Debug.LogWarning($"[Graphy] Failed to set FFT window size {m_spectrumSize}: {result}");
                     }
                     
                     // Set window type (default to Blackman for good frequency resolution)
-                    result = fftDsp.setParameterInt((int)FMOD.DSP_FFT.WINDOWTYPE, (int)FMOD.DSP_FFT_WINDOW.BLACKMAN);
                     
                     // Add DSP to master channel group
                     if (m_masterChannelGroup != IntPtr.Zero)
                     {
                         FMOD.ChannelGroup masterGroup = new FMOD.ChannelGroup(m_masterChannelGroup);
-                        result = masterGroup.addDSP(0, m_fftDsp);
+                         result = masterGroup.addDSP(0, m_fftDsp);
                         if (result == FMOD.RESULT.OK)
                         {
                             // Allocate spectrum data array
