@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using Tayx.Graphy;
 using Tayx.Graphy.Fmod;
 
-namespace Tayx.Graphy.Editor
+namespace Tayx.Graphy.FmodEditor
 {
     internal static class GraphyFmodOverlayBuilder
     {
