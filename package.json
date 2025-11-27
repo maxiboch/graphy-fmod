@@ -1,27 +1,27 @@
 {
-    "name": "com.tayx.graphy.fmod",
-    "version": "3.1.12",
-    "displayName": "Graphy w/FMOD - Enhanced Performance Monitor",
-    "description": "Maxi Boch's custom fork of Martin Pane's Graphy with FMOD audio system monitoring, CPU/GPU tracking, and performance improvements",
-    "unity": "2019.4",
-    "license": "MIT",
-    "keywords": [
-        "fps",
-        "counter",
-        "performance",
-        "debugger",
-        "graphy",
-        "fmod"
-    ],
-    "author": {
-	    "name": "Maxi Boch",
-	    "email": "maxiboch@gmail.com",
-	    "url": "https://twitter.com/maxiboch"
-  	},
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/maxiboch/graphy-fmod.git"
-    },
-    "documentationUrl": "https://github.com/maxiboch/graphy-fmod/blob/main/README.md",
-    "changelogUrl": "https://github.com/maxiboch/graphy-fmod/blob/main/CHANGELOG_FMOD.md"
+    "name":  "com.tayx.graphy.fmod",
+    "version":  "3.1.13",
+    "displayName":  "Graphy w/FMOD - Enhanced Performance Monitor",
+    "description":  "Maxi Boch\u0027s custom fork of Martin Pane\u0027s Graphy with FMOD audio system monitoring, CPU/GPU tracking, and performance improvements",
+    "unity":  "2019.4",
+    "license":  "MIT",
+    "keywords":  [
+                     "fps",
+                     "counter",
+                     "performance",
+                     "debugger",
+                     "graphy",
+                     "fmod"
+                 ],
+    "author":  {
+                   "name":  "Maxi Boch",
+                   "email":  "maxiboch@gmail.com",
+                   "url":  "https://twitter.com/maxiboch"
+               },
+    "repository":  {
+                       "type":  "git",
+                       "url":  "https://github.com/maxiboch/graphy-fmod.git"
+                   },
+    "documentationUrl":  "https://github.com/maxiboch/graphy-fmod/blob/main/README.md",
+    "changelogUrl":  "https://github.com/maxiboch/graphy-fmod/blob/main/CHANGELOG_FMOD.md"
 }
