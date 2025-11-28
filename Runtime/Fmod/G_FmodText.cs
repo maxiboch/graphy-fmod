@@ -154,7 +154,8 @@ namespace Tayx.Graphy.Fmod
 
             if (m_fileUsageText != null)
             {
-                m_fileUsageText.text = $"File I/O: {m_fmodMonitor.CurrentFileUsageKBps.ToStringNonAlloc(FILE_USAGE_FORMAT)} KB/s";
+                string fileIOText = FormatFileUsage(m_fmodMonitor.CurrentFileUsageKBps);
+                m_fileUsageText.text = $"File I/O: {fileIOText}";
             }
 
             // Update average values
@@ -175,7 +176,8 @@ namespace Tayx.Graphy.Fmod
 
             if (m_fileUsageAvgText != null)
             {
-                m_fileUsageAvgText.text = $"Avg: {m_fmodMonitor.AverageFileUsageKBps.ToStringNonAlloc(FILE_USAGE_FORMAT)} KB/s";
+                string avgFileIOText = FormatFileUsage(m_fmodMonitor.AverageFileUsageKBps);
+                m_fileUsageAvgText.text = $"Avg: {avgFileIOText}";
             }
 
             // Update peak values
@@ -196,7 +198,26 @@ namespace Tayx.Graphy.Fmod
 
             if (m_fileUsagePeakText != null)
             {
-                m_fileUsagePeakText.text = $"Peak: {m_fmodMonitor.PeakFileUsageKBps.ToStringNonAlloc(FILE_USAGE_FORMAT)} KB/s";
+                string peakFileIOText = FormatFileUsage(m_fmodMonitor.PeakFileUsageKBps);
+                m_fileUsagePeakText.text = $"Peak: {peakFileIOText}";
+            }
+        }
+
+        private string FormatFileUsage(float kbps)
+        {
+            if (kbps >= 1024f * 1024f) // >= 1 GB/s
+            {
+                float gbps = kbps / (1024f * 1024f);
+                return $"{gbps.ToStringNonAlloc(FILE_USAGE_FORMAT)} GB/s";
+            }
+            else if (kbps >= 1024f) // >= 1 MB/s
+            {
+                float mbps = kbps / 1024f;
+                return $"{mbps.ToStringNonAlloc(FILE_USAGE_FORMAT)} MB/s";
+            }
+            else
+            {
+                return $"{kbps.ToStringNonAlloc(FILE_USAGE_FORMAT)} KB/s";
             }
         }
 

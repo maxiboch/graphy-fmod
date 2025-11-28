@@ -56,6 +56,10 @@ namespace Tayx.Graphy.Fmod
         private float m_highestChannelsValue = 0f;
         private float m_highestFileIOValue = 0f;
 
+        // Graph update throttling - update graphs much slower than text
+        private float m_graphUpdateInterval = 1.0f; // Update graph every 1 second (60x slower than FPS graphs)
+        private float m_timeSinceLastGraphUpdate = 0f;
+
         #endregion
 
         #region Methods -> Unity Callbacks
@@ -72,7 +76,13 @@ namespace Tayx.Graphy.Fmod
                 return;
             }
 
-            UpdateGraph();
+            // Throttle graph updates to show longer time windows
+            m_timeSinceLastGraphUpdate += Time.unscaledDeltaTime;
+            if (m_timeSinceLastGraphUpdate >= m_graphUpdateInterval)
+            {
+                m_timeSinceLastGraphUpdate = 0f;
+                UpdateGraph();
+            }
         }
 
         #endregion

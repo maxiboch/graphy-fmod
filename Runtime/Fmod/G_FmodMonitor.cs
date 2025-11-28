@@ -539,23 +539,28 @@ namespace Tayx.Graphy.Fmod
                     // getFileUsage returns cumulative values, so calculate delta
                     long totalBytesRead = sampleBytesRead + streamBytesRead + otherBytesRead;
                     long deltaBytes = totalBytesRead - m_previousTotalBytesRead;
+
+                    // Only update if we have a valid previous reading
+                    if (m_previousTotalBytesRead > 0)
+                    {
+                        // Convert delta to KB/s based on update interval
+                        if (deltaBytes > 0)
+                        {
+                            float bytesPerSecond = deltaBytes / m_updateInterval;
+                            CurrentFileUsageKBps = bytesPerSecond / 1024f;
+                        }
+                        else
+                        {
+                            CurrentFileUsageKBps = 0f;
+                        }
+
+                        float avgFileUsage;
+                        UpdateStatistic(m_fileUsageSamples, CurrentFileUsageKBps, ref m_fileUsageSum, out avgFileUsage);
+                        AverageFileUsageKBps = avgFileUsage;
+                        PeakFileUsageKBps = Mathf.Max(PeakFileUsageKBps, CurrentFileUsageKBps);
+                    }
+
                     m_previousTotalBytesRead = totalBytesRead;
-
-                    // Convert delta to KB/s based on update interval
-                    if (deltaBytes > 0)
-                    {
-                        float bytesPerSecond = deltaBytes / m_updateInterval;
-                        CurrentFileUsageKBps = bytesPerSecond / 1024f;
-                    }
-                    else
-                    {
-                        CurrentFileUsageKBps = 0f;
-                    }
-
-                    float avgFileUsage;
-                    UpdateStatistic(m_fileUsageSamples, CurrentFileUsageKBps, ref m_fileUsageSum, out avgFileUsage);
-                    AverageFileUsageKBps = avgFileUsage;
-                    PeakFileUsageKBps = Mathf.Max(PeakFileUsageKBps, CurrentFileUsageKBps);
                 }
 
                 // DISABLED: Audio metering (RMS/Peak) - causing issues, disabled for now
