@@ -558,61 +558,11 @@ namespace Tayx.Graphy.Fmod
                     PeakFileUsageKBps = Mathf.Max(PeakFileUsageKBps, CurrentFileUsageKBps);
                 }
 
-                // Get audio metering info (if supported by this FMOD build)
-                if (m_meteringSupported && m_masterChannelGroup != IntPtr.Zero)
-                {
-                    try
-                    {
-                        FMOD.ChannelGroup masterGroup = new FMOD.ChannelGroup(m_masterChannelGroup);
-                        result = masterGroup.getMeteringInfo(out m_meteringInfo);
-                        if (result == FMOD.RESULT.OK && m_meteringInfo.numChannels > 0)
-                        {
-                            // Get RMS and peak levels
-                            int numChannels = Math.Min(m_meteringInfo.numChannels, 32);
+                // DISABLED: Audio metering (RMS/Peak) - causing issues, disabled for now
+                // if (m_meteringSupported && m_masterChannelGroup != IntPtr.Zero) { ... }
 
-                            // Copy levels from unmanaged memory
-                            if (m_meteringInfo.rmslevel != IntPtr.Zero)
-                            {
-                                Marshal.Copy(m_meteringInfo.rmslevel, m_rmsLevels, 0, numChannels);
-                            }
-                            if (m_meteringInfo.peaklevel != IntPtr.Zero)
-                            {
-                                Marshal.Copy(m_meteringInfo.peaklevel, m_peakLevels, 0, numChannels);
-                            }
-
-                            // For stereo, track left and right channels
-                            if (numChannels >= 2)
-                            {
-                                CurrentLeftRMS = LinearToDecibels(m_rmsLevels[0]);
-                                CurrentRightRMS = LinearToDecibels(m_rmsLevels[1]);
-                                CurrentLeftPeak = LinearToDecibels(m_peakLevels[0]);
-                                CurrentRightPeak = LinearToDecibels(m_peakLevels[1]);
-
-                                // Update averages
-                                float avgLeftRms, avgRightRms;
-                                UpdateStatistic(m_leftRmsSamples, CurrentLeftRMS, ref m_leftRmsSum, out avgLeftRms);
-                                UpdateStatistic(m_rightRmsSamples, CurrentRightRMS, ref m_rightRmsSum, out avgRightRms);
-                                AverageLeftRMS = avgLeftRms;
-                                AverageRightRMS = avgRightRms;
-                            }
-                            else if (numChannels == 1)
-                            {
-                                // Mono - use same value for both channels
-                                CurrentLeftRMS = CurrentRightRMS = LinearToDecibels(m_rmsLevels[0]);
-                                CurrentLeftPeak = CurrentRightPeak = LinearToDecibels(m_peakLevels[0]);
-                            }
-                        }
-                    }
-                    catch (EntryPointNotFoundException)
-                    {
-                        // Some FMOD builds don't include channel metering; disable it cleanly
-                        m_meteringSupported = false;
-                        Debug.LogWarning("[Graphy] FMOD channel metering API not available in this FMOD build. Disabling level meters.");
-                    }
-                }
-
-                // Update FFT spectrum if enabled
-                UpdateFFTSpectrum();
+                // DISABLED: FFT spectrum - causing issues, disabled for now
+                // UpdateFFTSpectrum();
             }
             catch (Exception e)
             {
@@ -686,8 +636,12 @@ namespace Tayx.Graphy.Fmod
         
         private void SetupFFT()
         {
+            // DISABLED: FFT setup - causing issues, returning early
+            return;
+
+            /* DISABLED CODE
             if (!m_isInitialized || m_fmodSystem == IntPtr.Zero || !m_fftEnabled) return;
-            
+
             try
             {
                 CleanupFFT();
@@ -695,22 +649,22 @@ namespace Tayx.Graphy.Fmod
                 m_spectrumSize = SanitizeSpectrumSize(m_spectrumSize);
 
                 FMOD.System system = new FMOD.System(m_fmodSystem);
-                
+
                 // Create FFT DSP
                 FMOD.RESULT result = system.createDSPByType(FMOD.DSP_TYPE.FFT, out m_fftDsp);
                 if (result == FMOD.RESULT.OK && m_fftDsp != IntPtr.Zero)
                 {
                     FMOD.DSP fftDsp = new FMOD.DSP(m_fftDsp);
-                    
+
                     // Set window size (spectrum size)
                     result = fftDsp.setParameterInt((int)FMOD.DSP_FFT.WINDOWSIZE, m_spectrumSize);
                     if (result != FMOD.RESULT.OK)
                     {
                         Debug.LogWarning($"[Graphy] Failed to set FFT window size {m_spectrumSize}: {result}");
                     }
-                    
+
                     // Set window type (default to Blackman for good frequency resolution)
-                    
+
                     // Add DSP to master channel group
                     if (m_masterChannelGroup != IntPtr.Zero)
                     {
@@ -739,6 +693,7 @@ namespace Tayx.Graphy.Fmod
                 Debug.LogWarning($"[Graphy] Error setting up FFT: {e.Message}");
                 CleanupFFT();
             }
+            */
         }
         
         private void CleanupFFT()
@@ -765,8 +720,12 @@ namespace Tayx.Graphy.Fmod
         
         private void UpdateFFTSpectrum()
         {
+            // DISABLED: FFT update - causing issues, returning early
+            return;
+
+            /* DISABLED CODE
             if (!m_fftEnabled || m_fftDsp == IntPtr.Zero || m_spectrumData == null) return;
-            
+
             try
             {
                 FMOD.DSP fftDsp = new FMOD.DSP(m_fftDsp);
@@ -775,23 +734,23 @@ namespace Tayx.Graphy.Fmod
                 IntPtr unmanagedData;
                 uint length;
                 FMOD.RESULT result = fftDsp.getParameterData((int)FMOD.DSP_FFT.SPECTRUMDATA, out unmanagedData, out length, IntPtr.Zero, 0);
-                
+
                 if (result == FMOD.RESULT.OK && unmanagedData != IntPtr.Zero)
                 {
                     // Marshal the FFT data
                     FMOD.DSP_PARAMETER_FFT fftData = (FMOD.DSP_PARAMETER_FFT)Marshal.PtrToStructure(unmanagedData, typeof(FMOD.DSP_PARAMETER_FFT));
-                    
+
                     if (fftData.spectrum != IntPtr.Zero && fftData.numChannels > 0)
                     {
                         // Copy spectrum data for first channel (or average channels)
                         int spectrumLength = fftData.length / 2; // Only positive frequencies
-                        
+
                         if (spectrumLength > 0 && spectrumLength <= m_spectrumData.Length)
                         {
                             // Get spectrum for first channel
                             IntPtr channelSpectrum = fftData.spectrum;
                             Marshal.Copy(channelSpectrum, m_spectrumData, 0, spectrumLength);
-                            
+
                             // Convert to dB if needed
                             for (int i = 0; i < spectrumLength; i++)
                             {
@@ -805,6 +764,7 @@ namespace Tayx.Graphy.Fmod
             {
                 Debug.LogWarning($"[Graphy] Error updating FFT spectrum: {e.Message}");
             }
+            */
         }
 
         #endregion
