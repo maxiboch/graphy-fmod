@@ -9,6 +9,11 @@ param(
     [string]$ReleaseNotes = ""
 )
 
+# Change to repository root (parent directory of Tools)
+$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+$repoRoot = Split-Path -Parent $scriptPath
+Set-Location $repoRoot
+
 Write-Host "🚀 Starting release process for version $Version" -ForegroundColor Cyan
 
 # Check for uncommitted changes
