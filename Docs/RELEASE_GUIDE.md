@@ -8,10 +8,10 @@ This repository includes two ways to automate the release process.
 
 ```powershell
 # Simple release with just version and message
-.\release.ps1 -Version "3.1.13" -Message "Fix bug in FMOD integration"
+.\Tools\release.ps1 -Version "3.1.13" -Message "Fix bug in FMOD integration"
 
 # Release with custom release notes
-.\release.ps1 -Version "3.1.13" -Message "Major update" -ReleaseNotes "## Features`n- New feature 1`n- New feature 2"
+.\Tools\release.ps1 -Version "3.1.13" -Message "Major update" -ReleaseNotes "## Features`n- New feature 1`n- New feature 2"
 ```
 
 **What it does:**
