@@ -674,7 +674,7 @@ namespace Tayx.Graphy.Fmod
                     if (m_masterChannelGroup != IntPtr.Zero)
                     {
                         FMOD.ChannelGroup masterGroup = new FMOD.ChannelGroup(m_masterChannelGroup);
-                         result = masterGroup.addDSP(0, m_fftDsp);
+                         result = masterGroup.addDSP(FMOD.CHANNELCONTROL_DSP_INDEX.TAIL, m_fftDsp);
                         if (result == FMOD.RESULT.OK)
                         {
                             // Allocate spectrum data array
